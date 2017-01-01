@@ -3,6 +3,7 @@
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use errors::{Result, Error};
+use zip::Zip;
 
 use std::io::Read;
 
@@ -16,28 +17,19 @@ pub enum EpubVersion {
 }
 
 
-/// How to zip the content to an EPUB file
-#[derive(Debug)]
-pub enum ZipTool {
-    /// Use an extern command
-    Command(String),
-    /// Use the libzip library
-    Library,
-}
-
 /// Epub files generator
 #[derive(Debug)]
-pub struct Epub {
+pub struct Epub<Z:Zip> {
     version: EpubVersion,
-    zip: ZipTool,
+    zip: Z,
 }
 
-impl Epub {
+impl<Z:Zip> Epub<Z> {
     /// Create a new default EPUB Generator
-    pub fn new() -> Epub {
+    pub fn new(zip: Z) -> Epub<Z> {
         Epub {
             version: EpubVersion::Epub2,
-            zip: ZipTool::Command(String::from("zip")),
+            zip: zip,
         }
     }
 
@@ -67,17 +59,17 @@ impl Epub {
         Ok(self)
     }
 
-    /// Use specified zip command to zip the EPUB file
-    pub fn zip_command<S:Into<String>>(&mut self, command: S) -> &mut Self {
-        self.zip = ZipTool::Command(command.into());
-        self
-    }
+    // /// Use specified zip command to zip the EPUB file
+    // pub fn zip_command<S:Into<String>>(&mut self, command: S) -> &mut Self {
+    //     self.zip = ZipTool::Command(command.into());
+    //     self
+    // }
 
-    /// Use the libzip library to zip the EPUB file.
-    pub fn zip_library(&mut self) -> &mut Self {
-        self.zip = ZipTool::Library;
-        self
-    }
+    // /// Use the libzip library to zip the EPUB file.
+    // pub fn zip_library(&mut self) -> &mut Self {
+    //     self.zip = ZipTool::Library;
+    //     self
+    // }
 
     /// Sets a titlepage. If titlepage in not set, a default one will be generated.
     pub fn titlepage<R: Read>(&mut self,
@@ -128,7 +120,9 @@ impl Epub {
     }
 
     /// Generate the EPUB to the specified file.
-    pub fn generate(&mut self, file: &str) -> Result<()> {
+    pub fn generate(self, file: &str) -> Result<()> {
         Ok(())
     }
 }
+
+

@@ -15,3 +15,5 @@ path = "src/lib.rs"
 
 [dependencies]
 error-chain = "0.7"
+tempdir = "0.3" # Used by ZipCommand
+zip = "0.2" # Used by ZipLibrary
