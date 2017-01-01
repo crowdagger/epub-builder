@@ -1,0 +1,17 @@
+[package]
+name = "epub"
+version = "0.0.1-pre"
+authors = ["Elisabeth Henry <liz.henry@ouvaton.org>"]
+description = "A Rust library for generating EPUB files"
+readme = "README.md"
+keywords = ["epub"]
+repository = "https://github.com/lise-henry/epub/"
+documentation = "https://docs.rs/epub"
+license = "MPL-2.0"
+
+[lib]
+name = "epub"
+path = "src/lib.rs"
+
+[dependencies]
+
