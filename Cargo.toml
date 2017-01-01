@@ -14,4 +14,4 @@ name = "epub"
 path = "src/lib.rs"
 
 [dependencies]
-
+error-chain = "0.7"

@@ -1,9 +1,15 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with
-// this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //! A library to generate EPUB files.
 
 #![deny(missing_docs)]
 
+#[macro_use]
+extern crate error_chain;
 
+mod errors; 
+mod epub;
+
+pub use errors::*;
+pub use epub::Epub;
+pub use epub::EpubVersion;
+pub use epub::ZipTool;
