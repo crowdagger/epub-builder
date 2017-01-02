@@ -75,14 +75,44 @@ fn main() {
 }
 ```
 
+## Features
+
+`epub-builder`'s aim is to make EPUB generation simpler. It takes care of zipping
+the files and generate the following ones:
+
+* `mimetype`
+* `toc.ncx`
+* `nav.xhtml`
+* `manifest.xml`
+* `content.opf`
+* `com.apple.ibooks.display-options.xml`.
+
+It also tries to make it easier to have a correct table of contents, and optionally
+generate an inline one in the document.
+
+Supported EPUB versions:
+
+* 2.0.1 (default)
+* 3.0.1
+
+### Missing features
+
+There are various EPUB features that `epub-builder` doesn't handle. Particularly,
+there are some metadata that could be better 
+handled (e.g. support multiple authors, multiple languages in the document and so on).
+
+There are also various things that aren't in the scope of this library: it doesn't
+provide a default CSS, templates for your XHTML content and so on. This is left to
+libraries or applications using it.
+
 ## Conditional compilation
 
-EPUB files are Zip files, so we need to zip them. By default, this library features
+EPUB files are Zip files, so we need to zip. By default, this library provides
 wrappers around both the [Rust zip library](https://crates.io/crates/zip) and calls
 to the `zip` command that may (or may not) be installed on your system.
 
-It is possible to disable the compilation (and the dependencies) of either of this
-wrapper, using `no-defaut-features`. (If you don't enable at least one of them this
+It is possible to disable the compilation (and the dependencies) of either of these
+wrappers, using `no-defaut-features`. (If you don't enable at least one of them this
 library will be pretty useless).
 
 ## License
