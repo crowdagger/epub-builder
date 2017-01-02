@@ -17,10 +17,13 @@ use std::process::Command;
 
 use tempdir::TempDir;
 
-/// Zip files using the `zip` command.
+/// Zip files using the system `zip` command.
 ///
 /// Create a temporary directory, write temp files in that directory, and then
 /// calls the zip command to generate an epub file.
+///
+/// This method will fail if `zip` (or the alternate specified command) is not installed
+/// on the user system.
 pub struct ZipCommand {
     command: String,
     temp_dir: TempDir,
@@ -55,7 +58,7 @@ impl ZipCommand {
         Ok(zip)
     }
 
-    /// Set zip command to use
+    /// Set zip command to use (default: "zip")
     pub fn command<S: Into<String>>(&mut self, command: S) -> &mut Self {
         self.command = command.into();
         self

@@ -9,8 +9,8 @@ use std::path::Path;
 
 /// An abstraction over possible Zip implementations.
 ///
-/// The actual implementations are `ZipCommand` (uses the command zip) or
-/// `ZipLibrary` (uses the `zip` library).
+/// The actual implementations are `ZipCommand` (uses the system command zip) or
+/// `ZipLibrary` (uses the [Rust zip library](https://crates.io/crates/zip)).
 pub trait Zip {
     /// Write the source content to a file in the archive
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, file: P, content: R) -> Result<()>;

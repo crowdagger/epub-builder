@@ -15,7 +15,7 @@ use std::io::Cursor;
 use libzip::ZipWriter;
 use libzip::write::FileOptions;
 
-/// Zip files using the Rust `zip` library.
+/// Zip files using the [Rust `zip`](https://crates.io/crates/zip) library.
 pub struct ZipLibrary {
     writer: ZipWriter<Cursor<Vec<u8>>>,
 }
@@ -28,7 +28,7 @@ impl fmt::Debug for ZipLibrary {
 
 
 impl ZipLibrary {
-    /// Creates a new ZipLibrary
+    /// Creates a new wrapper for zip library
     pub fn new() -> ZipLibrary {
         ZipLibrary {
             writer: ZipWriter::new(Cursor::new(vec!()))

@@ -7,6 +7,25 @@ use toc::TocElement;
 use std::io::Read;
 
 /// Represents a XHTML file that can be added to an EPUB document.
+///
+/// This struct is designed to be used with the `add_content` method
+/// of the `[EpubBuilder](struct.EpubBuilder.html).
+///
+/// # Example
+///
+/// ```
+/// use epub_builder::{EpubContent, TocElement};
+///
+/// let page_content = "Some XHTML content";
+///
+/// // Creates a new EpubContent
+/// let content = EpubContent::new("intro.xhtml", page_content.as_bytes())
+/// // ... and sets a title so it is added to the TOC
+///     .title("Introduction")
+/// // ... and add some toc information on the document structure
+///     .child(TocElement::new("intro.xhtml#1", "Section 1"))
+///     .child(TocElement::new("intro.xhtml#2", "Section 2"));
+/// ```
 #[derive(Debug)]
 pub struct EpubContent<R: Read> {
     /// The title and url, plus sublevels
@@ -17,6 +36,9 @@ pub struct EpubContent<R: Read> {
 
 impl<R: Read> EpubContent<R> {
     /// Creates a new EpubContent
+    ///
+    /// By default, this element is at level 1, and it has no title
+    /// (meaning it won't be added to the [`Table of Contents`](struct.Toc.html).
     pub fn new<S: Into<String>>(href: S, content: R) -> Self {
         EpubContent {
             content: content,
@@ -24,8 +46,8 @@ impl<R: Read> EpubContent<R> {
         }
     }
 
-    /// Set the title of this content. Used for the TOC. If to title is set,
-    /// this fragment will not be displayed in the TOC.
+    /// Set the title of this content. If no title is set,
+    /// this part of the book will not be displayed in the table of content.
     pub fn title<S: Into<String>>(mut self, title: S) -> Self {
         self.toc.title = title.into();
         self
