@@ -203,6 +203,9 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// `add_content`, files added this way won't appear in the linear
     /// document.
     ///
+    /// Note that these files will automatically be inserted into an `OEBPS` directory,
+    /// so you don't need (and shouldn't) prefix your path with `OEBPS/`.
+    ///
     /// # Arguments
     ///
     /// * `path`: the path where this file will be writen in the EPUB OEBPS structure,
@@ -251,9 +254,13 @@ impl<Z:Zip> EpubBuilder<Z> {
     ///                      .level(2)).unwrap();
     /// ```
     ///
+    /// Note that these files will automatically be inserted into an `OEBPS` directory,
+    /// so you don't need (and shouldn't) prefix your path with `OEBPS/`.
+    ///
     /// # See also
     ///
-    /// [`EpubContent`](struct.EpubContent.html)
+    /// * [`EpubContent`](struct.EpubContent.html)
+    /// * the `add_resource` method, to add other resources in the EPUB file.
     pub fn add_content<R: Read>(&mut self, content: EpubContent<R>)-> Result<&mut Self> {
         self.zip.write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
                             content.content)?;
