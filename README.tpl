@@ -1,4 +1,4 @@
-[See the full library documentation on Docs.rs.](https://docs.rs/epub)
+[See the full library documentation on Docs.rs.](https://docs.rs/epub-builder)
 
 {{readme}}
 
