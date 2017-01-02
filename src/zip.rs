@@ -5,7 +5,6 @@
 use errors::Result;
 
 use std::io::Read;
-use std::path::PathBuf;
 use std::path::Path;
 
 /// An abstraction over possible Zip implementations.

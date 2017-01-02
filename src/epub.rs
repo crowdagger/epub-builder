@@ -4,7 +4,6 @@
 
 use templates;
 use errors::Result;
-use errors::Error;
 use errors::ResultExt;
 use zip::Zip;
 use toc::Toc;
@@ -171,15 +170,6 @@ impl<Z:Zip> Epub<Z> {
     }
     
 
-    /// Add a chapter to the EPUB.
-    ///
-    /// Wraps around `add_content`.
-    pub fn add_chapter<R: Read, S: Into<String>>(&mut self,
-                                                 title: S,
-                                                 content: R) -> Result<&mut Self> {
-        self.add_content(EpubContent::new("todo", content))
-    }
-
     /// Add a resource
     ///
     /// Can be a picture, font, ...
@@ -291,7 +281,7 @@ impl<Z:Zip> Epub<Z> {
             }
         }
 
-        let mut data = MapBuilder::new()
+        let data = MapBuilder::new()
             .insert_str("lang", &self.metadata.lang)
             .insert_str("author", &self.metadata.author)
             .insert_str("title", &self.metadata.title)

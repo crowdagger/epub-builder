@@ -2,9 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use errors::Result;
-use errors::ResultExt;
-
 /// An element of the Table of content
 #[derive(Debug, Clone)]
 pub struct TocElement {
