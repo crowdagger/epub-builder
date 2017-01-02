@@ -13,7 +13,7 @@
 //!
 //! Add this in your `Cargo.toml` file:
 //!
-//! ```toml, ignore
+//! ```toml
 //! [dependencies]
 //! epub-builder: "0.1"
 //! ```
