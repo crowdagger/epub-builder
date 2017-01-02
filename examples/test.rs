@@ -1,17 +1,17 @@
-extern crate epub;
+extern crate epub_builder;
 
-use epub::Epub;
-use epub::ZipCommand;
-use epub::ZipLibrary;
-use epub::Zip;
-use epub::EpubContent;
-use epub::TocElement;
+use epub_builder::EpubBuilder;
+use epub_builder::ZipCommand;
+use epub_builder::ZipLibrary;
+use epub_builder::Zip;
+use epub_builder::EpubContent;
+use epub_builder::TocElement;
 
 use std::io;
 use std::io::Write;
 
 fn main() {
-    let mut epub = Epub::new(ZipLibrary::new()).unwrap();
+    let mut epub = EpubBuilder::new(ZipLibrary::new()).unwrap();
     epub.metadata("author", "Lise").unwrap()
         .metadata("title", "Test").unwrap()
         .add_resource("foo.txt", "coin coin".as_bytes(), "text").unwrap()

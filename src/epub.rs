@@ -29,7 +29,7 @@ pub enum EpubVersion {
 
 /// EPUB Metadata
 #[derive(Debug)]
-pub struct Metadata {
+struct Metadata {
     pub title: String,
     pub author: String,
     pub lang: String,
@@ -56,7 +56,7 @@ impl Metadata {
     }
 }
 
-/// A file added in an EPUB
+/// A file added in the EPUB
 #[derive(Debug)]
 struct Content {
     pub file: String,
@@ -75,9 +75,9 @@ impl Content {
     }
 }
 
-/// Epub files generator
+/// Epub Builder
 #[derive(Debug)]
-pub struct Epub<Z:Zip> {
+pub struct EpubBuilder<Z:Zip> {
     version: EpubVersion,
     zip: Z,
     files: Vec<Content>,
@@ -87,10 +87,10 @@ pub struct Epub<Z:Zip> {
     inline_toc: bool,
 }
 
-impl<Z:Zip> Epub<Z> {
+impl<Z:Zip> EpubBuilder<Z> {
     /// Create a new default EPUB Generator
-    pub fn new(zip: Z) -> Result<Epub<Z>> {
-        let mut epub = Epub {
+    pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
+        let mut epub = EpubBuilder {
             version: EpubVersion::V2,
             zip: zip,
             files: vec!(),

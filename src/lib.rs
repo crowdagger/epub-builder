@@ -27,7 +27,7 @@ mod toc;
 mod epub_content;
 
 pub use errors::*;
-pub use epub::Epub;
+pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
 pub use zip_command::ZipCommand;
 pub use zip_library::ZipLibrary;
