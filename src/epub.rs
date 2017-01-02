@@ -21,10 +21,13 @@ use mustache::MapBuilder;
 /// Represents a EPUB version
 #[derive(Debug, Copy, Clone)]
 pub enum EpubVersion {
-    /// EPUB 2 format
-    V2,
-    /// EPUB 3.0 format
-    V3_0, 
+    /// EPUB 2.0.1 format
+    V20,
+    /// EPUB 3.0.1 format
+    V30,
+    /// Hint that destructuring should not be exhaustive
+    #[doc(hidden)]
+    __NonExhaustive,
 }
 
 /// EPUB Metadata
@@ -88,10 +91,10 @@ pub struct EpubBuilder<Z:Zip> {
 }
 
 impl<Z:Zip> EpubBuilder<Z> {
-    /// Create a new default EPUB Generator
+    /// Create a new default EPUB Builder
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
-            version: EpubVersion::V2,
+            version: EpubVersion::V20,
             zip: zip,
             files: vec!(),
             metadata: Metadata::new(),
@@ -108,7 +111,12 @@ impl<Z:Zip> EpubBuilder<Z> {
         Ok(epub)
     }
 
-    /// Set EPUB version (default: epub2)
+    /// Set EPUB version (default: V20)
+    ///
+    /// Supported versions are:
+    ///
+    /// * `V20`: EPUB 2.0.1
+    /// * 'V30`: EPUB 3.0.1
     pub fn epub_version(&mut self, version: EpubVersion) -> &mut Self {
         self.version = version;
         self
@@ -295,8 +303,9 @@ impl<Z:Zip> EpubBuilder<Z> {
 
         let mut content = vec!();
         let res = match self.version {
-            EpubVersion::V2 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
-            EpubVersion::V3_0 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
+            EpubVersion::V20 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
+            EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
+            EpubVersion::__NonExhaustive => unreachable!(),
         };
         
 
@@ -334,8 +343,9 @@ impl<Z:Zip> EpubBuilder<Z> {
 
         let mut res = vec!();
         let eh = match self.version {
-            EpubVersion::V2 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
-            EpubVersion::V3_0 => templates::v3::NAV_XHTML.render_data(&mut res, &data)
+            EpubVersion::V20 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
+            EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
+            EpubVersion::__NonExhaustive => unreachable!(),
         };
         
         eh.chain_err(|| "error rendering nav.xhtml template")?;
