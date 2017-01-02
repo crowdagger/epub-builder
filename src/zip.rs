@@ -5,6 +5,7 @@
 use errors::Result;
 
 use std::io::Read;
+use std::io::Write;
 use std::path::Path;
 
 /// An abstraction over possible Zip implementations.
@@ -15,8 +16,8 @@ pub trait Zip {
     /// Write the source content to a file in the archive
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, file: P, content: R) -> Result<()>;
 
-    /// Generate the EPUB file
-    fn generate(&mut self) -> Result<Vec<u8>>;
+    /// Generate the ZIP file
+    fn generate<W: Write>(&mut self, W) -> Result<()>;
 }
 
 

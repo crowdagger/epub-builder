@@ -10,6 +10,7 @@ use std::io;
 use std::fmt;
 use std::path::Path;
 use std::io::Read;
+use std::io::Write;
 use std::io::Cursor;
 
 use libzip::ZipWriter;
@@ -50,9 +51,12 @@ impl Zip for ZipLibrary {
         Ok(())
     }
 
-    fn generate(&mut self) -> Result<Vec<u8>> {
+    fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
         let cursor = self.writer.finish()
             .chain_err(|| "error writing zip file")?;
-        Ok(cursor.into_inner())
+        let bytes = cursor.into_inner();
+        to.write_all(bytes.as_ref())
+            .chain_err(|| "error writing zip file")?;
+        Ok(())
     }
 }

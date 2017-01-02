@@ -10,6 +10,7 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::io::Read;
+use std::io::Write;
 use std::fs;
 use std::fs::DirBuilder;
 use std::fs::File;
@@ -95,7 +96,7 @@ impl Zip for ZipCommand {
         Ok(())
     }
 
-    fn generate(&mut self) -> Result<Vec<u8>> {
+    fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
         let mut command = Command::new(&self.command);
         command
             .current_dir(self.temp_dir.path())
@@ -109,7 +110,9 @@ impl Zip for ZipCommand {
             .chain_err(|| format!("failed to run command {name}",
                                   name = self.command))?;
         if output.status.success() {
-            Ok(output.stdout)
+            to.write_all(output.stdout.as_ref())
+                .chain_err(|| "error writing result of the zip command")?;
+            Ok(())
         } else {
             bail!("command {name} didn't return succesfully: {output}",
                   name = self.command,

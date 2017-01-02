@@ -278,7 +278,7 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// let mut epub: Vec<u8> = vec!();
     /// builder.generate(&mut epub).unwrap();
     /// ```
-    pub fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
+    pub fn generate<W: Write>(&mut self, to: W) -> Result<()> {
         // If no styleesheet was provided, generate a dummy one
         if !self.stylesheet {
             self.stylesheet("".as_bytes())?;
@@ -299,10 +299,7 @@ impl<Z:Zip> EpubBuilder<Z> {
         }
 
         
-        let res = self.zip.generate()?;
-        to.write_all(res.as_ref())
-            .chain_err(|| "error writing final result of EPUB content")?;
-        
+        self.zip.generate(to)?;
         Ok(())
     }
 
