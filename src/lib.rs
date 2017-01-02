@@ -8,15 +8,21 @@
 #![deny(missing_docs)]
 
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate error_chain;
+extern crate mustache;
 extern crate tempdir;
 extern crate zip as libzip;
+extern crate chrono;
+extern crate uuid;
 
 mod errors; 
 mod epub;
 mod zip;
 mod zip_command;
 mod zip_library;
+mod templates;
 
 pub use errors::*;
 pub use epub::Epub;

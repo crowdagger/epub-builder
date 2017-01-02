@@ -15,5 +15,9 @@ path = "src/lib.rs"
 
 [dependencies]
 error-chain = "0.7"
+mustache = "0.8"
+lazy_static = "0.2"
+chrono = "0.2"
+uuid = { version = "0.3", features = ["v4"] }
 tempdir = "0.3" # Used by ZipCommand
 zip = "0.2" # Used by ZipLibrary

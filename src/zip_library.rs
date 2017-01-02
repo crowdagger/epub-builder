@@ -6,8 +6,9 @@ use errors::Result;
 use errors::ResultExt;
 use zip::Zip;
 
-use std::path::Path;
 use std::io;
+use std::fmt;
+use std::path::Path;
 use std::io::Read;
 use std::io::Cursor;
 
@@ -18,6 +19,13 @@ use libzip::write::FileOptions;
 pub struct ZipLibrary {
     writer: ZipWriter<Cursor<Vec<u8>>>,
 }
+
+impl fmt::Debug for ZipLibrary {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ZipLibrary")
+    }
+}
+
 
 impl ZipLibrary {
     /// Creates a new ZipLibrary

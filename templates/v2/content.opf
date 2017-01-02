@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package version="2.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="epub-id-1">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"
+            xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:identifier id="epub-id-1">{{uuid}}</dc:identifier>
+    <dc:title>{{{title}}}</dc:title>
+    <dc:date>{{{date}}}</dc:date>
+    <dc:language>{{{lang}}}</dc:language>
+    <dc:creator opf:role="aut">{{{author}}}</dc:creator>
+    {{{optional}}}
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml" />
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" />
+    {{{items}}}
+  </manifest>
+  <spine toc="ncx">
+    {{{itemrefs}}}
+  </spine>
+  <guide>
+    <reference type="toc" title="{{{title}}}" href="nav.xhtml" />
+  </guide>
+</package>

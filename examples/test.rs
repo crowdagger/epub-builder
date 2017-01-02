@@ -9,11 +9,10 @@ use std::io;
 use std::io::Write;
 
 fn main() {
-    let mut zip = ZipLibrary::new();
-    let foo = "Coin! Coin!";
-    zip.write_file("test.txt", foo.as_bytes()).unwrap();
-    match zip.generate() {
-        Ok(res) =>  io::stdout().write_all(&res).unwrap(),
-        Err(err) => println!("{}", err)
-    }
+    let mut epub = Epub::new(ZipLibrary::new()).unwrap();
+    epub.metadata("author", "Lise").unwrap()
+        .metadata("title", "Test").unwrap();
+    epub.add_resource("foo.txt", "coin coin".as_bytes(), "text");
+//    println!("{:?}", epub);
+    epub.generate(&mut io::stdout()).unwrap();
 }
