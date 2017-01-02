@@ -23,6 +23,8 @@ mod zip;
 mod zip_command;
 mod zip_library;
 mod templates;
+mod toc;
+mod epub_content;
 
 pub use errors::*;
 pub use epub::Epub;
@@ -30,3 +32,6 @@ pub use epub::EpubVersion;
 pub use zip_command::ZipCommand;
 pub use zip_library::ZipLibrary;
 pub use zip::Zip;
+pub use toc::Toc;
+pub use toc::TocElement;
+pub use epub_content::EpubContent;

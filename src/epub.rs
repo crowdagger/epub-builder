@@ -7,6 +7,9 @@ use errors::Result;
 use errors::Error;
 use errors::ResultExt;
 use zip::Zip;
+use toc::Toc;
+use toc::TocElement;
+use epub_content::EpubContent;
 
 use std::io::Read;
 use std::io::Write;
@@ -32,6 +35,7 @@ pub struct Metadata {
     pub author: String,
     pub lang: String,
     pub generator: String,
+    pub toc_name: String,
     pub description: Option<String>,
     pub subject: Option<String>,
     pub license: Option<String>,
@@ -45,6 +49,7 @@ impl Metadata {
             author: String::new(),
             lang: String::from("en"),
             generator: String::from("Rust EPUB library"),
+            toc_name: String::from("Table Of Contents"),
             description: None,
             subject: None,
             license: None,
@@ -78,6 +83,9 @@ pub struct Epub<Z:Zip> {
     zip: Z,
     files: Vec<Content>,
     metadata: Metadata,
+    toc: Toc,
+    stylesheet: bool,
+    inline_toc: bool,
 }
 
 impl<Z:Zip> Epub<Z> {
@@ -88,6 +96,9 @@ impl<Z:Zip> Epub<Z> {
             zip: zip,
             files: vec!(),
             metadata: Metadata::new(),
+            toc: Toc::new(),
+            stylesheet: false,
+            inline_toc: false,
         };
         
         // Write mimetype upfront
@@ -120,6 +131,7 @@ impl<Z:Zip> Epub<Z> {
     /// * `description`;
     /// * `generator`: generator of the book (should be your program name);
     /// * `license`
+    /// * `toc_name`
     pub fn metadata<S1: AsRef<str>, S2: Into<String>>(&mut self, key: S1, value: S2) -> Result<&mut Self> {
         match key.as_ref() {
             "author" => self.metadata.author = value.into(),
@@ -129,10 +141,35 @@ impl<Z:Zip> Epub<Z> {
             "description" => self.metadata.description = Some(value.into()),
             "subject" => self.metadata.subject = Some(value.into()),
             "license" => self.metadata.license = Some(value.into()),
+            "toc_name" => self.metadata.toc_name = value.into(),
             s => bail!("invalid metadata '{}'", s),
         }
         Ok(self)
     }
+
+    /// Sets stylesheet of the EPUB.
+    ///
+    /// This content will be written in a `stylesheet.css` file; it is used by
+    /// some pages (such as nav.xhtml), you don't have use it in your documents though it
+    /// makes sense to also do so.
+    pub fn stylesheet<R:Read>(&mut self, content: R) -> Result<&mut Self> {
+        self.add_resource("OEBPS/stylesheet.css", content, "text/css")?;
+        self.stylesheet = true;
+        Ok(self)
+    }
+
+    /// Adds an inline toc in the document.
+    ///
+    /// If this method is called it adds a TOC similar to nav.xhtml but listed in the inline document.
+    pub fn inline_toc(&mut self) -> &mut Self {
+        self.inline_toc = true;
+        self.toc.add(TocElement::new("toc.xhtml", self.metadata.toc_name.as_ref()));
+        let mut file = Content::new("toc.xhtml", "application/xhtml+xml");
+        file.itemref = true;
+        self.files.push(file);
+        self
+    }
+    
 
     /// Add a chapter to the EPUB.
     ///
@@ -140,7 +177,7 @@ impl<Z:Zip> Epub<Z> {
     pub fn add_chapter<R: Read, S: Into<String>>(&mut self,
                                                  title: S,
                                                  content: R) -> Result<&mut Self> {
-        self.add_content(1, title, vec!(), content)
+        self.add_content(EpubContent::new("todo", content))
     }
 
     /// Add a resource
@@ -157,32 +194,63 @@ impl<Z:Zip> Epub<Z> {
                                                                      path: P,
                                                                      content: R,
                                                                      mime_type: S) -> Result<&mut Self> {
-        self.zip.write_file(path.as_ref(), content)?;
+        self.zip.write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
         self.files.push(Content::new(format!("{}", path.as_ref().display()), mime_type));
         Ok(self)
     }
     
-    /// Add a content file that will be added to the EPUB.
+    /// Add a XHTML content file that will be added to the EPUB.
     ///
-    /// # Arguments
+    /// # Examples
+    ///
+    /// ```ignore
+    /// epub.add_content(EpubContent::new("intro.xhtml", file));
+    /// ```
+    ///
+    /// ```ignore
+    /// epub.add_content(EpubContent::new("chapter_1.xhtml", File::open("chapter_1.xhtml")?)
+    ///                      .title("Chapter 1")
+    ///                      .child(TocElement::new("chapter_1.xhtml#1", "1.1")));
+    /// ```
     ///
     /// * `level`: the level this content will be added in the toc;
     /// * `title`: the title of this content, as it should appear in the TOC;
     /// * `inner_toc`: a table of contents descrbing the inner layout of the content;
     /// * `content`: should be the contents of an XHTML file.
-    pub fn add_content<R: Read, S:Into<String>>(&mut self,
-                                                level: usize,
-                                                title: S,
-                                                inner_toc: Vec<()>,
-                                                content: R) -> Result<&mut Self> {
+    pub fn add_content<R: Read>(&mut self, content: EpubContent<R>)-> Result<&mut Self> {
+        self.zip.write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
+                            content.content)?;
+        let mut file = Content::new(content.toc.url.as_ref(),
+                                "application/xhtml+xml");
+        file.itemref = true;
+        self.files.push(file);
+        if !content.toc.title.is_empty() {
+            self.toc.add(content.toc);
+        }
         Ok(self)
     }
 
     /// Generate the EPUB file and write it to the writer
     pub fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
+        // If no styleesheet was provided, generate a dummy one
+        if !self.stylesheet {
+            self.stylesheet("".as_bytes())?;
+        }
         /// Render content.opf
         let bytes = self.render_opf()?;
-        self.zip.write_file("content.opf", &bytes as &[u8])?;
+        self.zip.write_file("OEBPS/content.opf", &bytes as &[u8])?;
+        /// Render toc.ncx
+        let bytes = self.render_toc()?;
+        self.zip.write_file("OEBPS/toc.ncx", &bytes as &[u8])?;
+        // Render nav.xhtml
+        let bytes = self.render_nav(true)?;
+        self.zip.write_file("OEBPS/nav.xhtml", &bytes as &[u8])?;
+        // Write inline toc if it needs to
+        if self.inline_toc {
+            let bytes = self.render_nav(false)?;
+            self.zip.write_file("OEBPS/toc.xhtml", &bytes as &[u8])?;
+        }
+
         
         let res = self.zip.generate()?;
         to.write_all(res.as_ref())
@@ -246,6 +314,42 @@ impl<Z:Zip> Epub<Z> {
             .chain_err(|| "could not render template for content.opf")?;
 
         Ok(content)
+    }
+
+        /// Render toc.ncx
+    fn render_toc(&mut self) -> Result<Vec<u8>> {
+        let mut nav_points = String::new();
+
+        nav_points.push_str(&self.toc.render_epub());
+
+        let data = MapBuilder::new()
+            .insert_str("toc_name", &self.metadata.toc_name)
+            .insert_str("nav_points", nav_points)
+            .build();
+        let mut res: Vec<u8> = vec![];
+        templates::TOC_NCX.render_data(&mut res, &data)
+            .chain_err(|| "error rendering toc.ncx template")?;
+        Ok(res)
+    }
+
+
+    /// Render nav.xhtml
+    fn render_nav(&mut self, numbered: bool) -> Result<Vec<u8>> {
+        let content = self.toc.render(numbered);
+        let data = MapBuilder::new()
+            .insert_str("content", content)
+            .insert_str("toc_name", &self.metadata.toc_name)
+            .insert_str("generator", &self.metadata.generator)
+            .build();
+
+        let mut res = vec!();
+        let eh = match self.version {
+            EpubVersion::V2 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
+            EpubVersion::V3_0 => templates::v3::NAV_XHTML.render_data(&mut res, &data)
+        };
+        
+        eh.chain_err(|| "error rendering nav.xhtml template")?;
+        Ok(res)
     }
 }
 
