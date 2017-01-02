@@ -153,7 +153,7 @@ impl<Z:Zip> Epub<Z> {
     /// some pages (such as nav.xhtml), you don't have use it in your documents though it
     /// makes sense to also do so.
     pub fn stylesheet<R:Read>(&mut self, content: R) -> Result<&mut Self> {
-        self.add_resource("OEBPS/stylesheet.css", content, "text/css")?;
+        self.add_resource("stylesheet.css", content, "text/css")?;
         self.stylesheet = true;
         Ok(self)
     }
