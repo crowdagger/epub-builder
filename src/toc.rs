@@ -121,7 +121,29 @@ impl TocElement {
 }
 
 
-/// A structure for manipulating Table Of Contents
+/// A Table Of Contents
+///
+/// It basically contains a list of [`TocElement`](struct.TocElement.html)s.
+///
+/// # Example
+///
+/// Creates a Toc, fills it, and render it to HTML:
+///
+/// ```
+/// use epub_builder::{Toc, TocElement};
+/// Toc::new()
+///    // add a level-1 element
+///    .add(TocElement::new("intro.xhtml", "Introduction"))
+///    // add a level-1 element with children
+///    .add(TocElement::new("chapter_1.xhtml", "Chapter 1")
+///            .child(TocElement::new("chapter_1.xhtml#section1", "1.1: Some section"))
+///            .child(TocElement::new("chapter_1.xhtml#section2", "1.2: another section")))
+///    // add a level-2 element, which will thus get "attached" to previous level-1 element
+///    .add(TocElement::new("chapter_1.xhtml#section3", "1.3: yet another section")
+///            .level(2))
+///    // render the toc (non-numbered list) and returns a string
+///    .render(false);
+/// ```
 #[derive(Debug)]
 pub struct Toc {
     /// The elements composing the TOC
@@ -129,7 +151,7 @@ pub struct Toc {
 }
 
 impl Toc {
-    /// Create a new, empty, Toc
+    /// Creates a new, empty, Toc
     pub fn new() -> Toc {
         Toc {
             elements: vec![],
@@ -139,13 +161,33 @@ impl Toc {
     /// Returns `true` if the toc is empty, `false` else.
     ///
     /// Note that `empty` here means that the the toc has zero *or one*
-    /// element, since it's still useless in this case.
+    /// element, since it's still not worth displaying it in this case.
     pub fn is_empty(&self) -> bool {
         self.elements.len() <= 1
     }
 
-    /// Adds an element
-    pub fn add(&mut self, element: TocElement) {
+    /// Adds a [`TocElement`](struct.TocElement.html) to the Toc.
+    ///
+    /// This will look at the element's level and will insert it as a child of the last
+    /// element of the Toc that has an inferior level.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use epub_builder::{Toc, TocElement};
+    /// let mut toc = Toc::new();
+    /// // Insert an element at default level (1)
+    /// toc.add(TocElement::new("chapter_1.xhtml", "Chapter 1"));
+    ///
+    /// // Insert an element at level 2
+    /// toc.add(TocElement::new("section_1.xhtml", "Section 1")
+    ///           .level(2));
+    /// // "Section 1" is now a child of "Chapter 1"
+    /// ```
+    ///
+    /// There are some cases where this behaviour might not be what you want; however,
+    /// it makes sure that the TOC can still be renderer correctly for HTML and EPUB.
+    pub fn add(&mut self, element: TocElement) -> &mut Self {
         let mut inserted = false;
         if let Some(ref mut last_elem) = self.elements.last_mut() {
             if element.level > last_elem.level {
@@ -156,6 +198,8 @@ impl Toc {
         if !inserted {
             self.elements.push(element);
         }
+
+        self
     }
 
     /// Render the Toc in a toc.ncx compatible way, for EPUB.
