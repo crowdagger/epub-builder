@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// An element of the Table of content
+/// An element of the Table of contents
 #[derive(Debug, Clone)]
 pub struct TocElement {
     /// The level. 0: part, 1: chapter, 2: section, ...
