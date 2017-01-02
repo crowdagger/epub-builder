@@ -2,7 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// An element of the Table of contents
+/// An element of the [Table of contents](struct.Toc.html)
+///
+/// # Example
+///
+/// ```
+/// use epub_builder::TocElement;
+/// TocElement::new("chapter_1.xhtml", "Chapter 1")
+///     .child(TocElement::new("chapter_1.xhtml#1", "Chapter 1, section 1")
+///               .child(TocElement::new("chapter_1.xhtml#1-1", "Chapter 1, section 1, subsection 1")));
+/// ```
 #[derive(Debug, Clone)]
 pub struct TocElement {
     /// The level. 0: part, 1: chapter, 2: section, ...
@@ -18,6 +27,8 @@ pub struct TocElement {
 
 impl TocElement {
     /// Creates a new element of the toc
+    ///
+    /// By default, the element's level is `1` and it has no children.
     pub fn new<S1: Into<String>, S2: Into<String>>(url: S1,
                                                    title: S2) -> TocElement {
         TocElement {
@@ -35,7 +46,7 @@ impl TocElement {
     }
 
     /// Change level, recursively, so the structure keeps having some sense
-    pub fn level_up(&mut self, level: i32) {
+    fn level_up(&mut self, level: i32) {
         self.level = level;
         for mut child in self.children.iter_mut() {
             if child.level <= self.level {
@@ -44,8 +55,22 @@ impl TocElement {
         }
     }
 
-    /// Add a child to this element. Adjust the level of the child to be the level
-    /// of its parents, plus 1.
+    /// Add a child to this element.
+    ///
+    /// This adjust the level of the child to be the level of its parents, plus 1;
+    /// this means that there is no point in manually setting the level to elements
+    /// added with this method.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use epub_builder::TocElement;
+    /// let elem = TocElement::new("foo.xhtml", "Foo")
+    ///     .child(TocElement::new("bar.xhtml", "Bar")
+    ///          .level(42));
+    ///
+    /// // `Bar`'s level wiss still be `2`.
+    /// ```
     pub fn child(mut self, mut child: TocElement) -> Self {
         if child.level <= self.level {
             child.level_up(self.level + 1);
@@ -54,7 +79,12 @@ impl TocElement {
         self
     }
 
-    /// Add element to self or to children, according to level
+    /// Add element to self or to children, according to its level
+    ///
+    /// This will adds `element` directly to `self` if its level is equal or less
+    /// to the last children element; else it will insert it to the last child.
+    ///
+    /// See the `add` method of [`Toc](struct.toc.html).
     pub fn add(&mut self, element: TocElement) {
         let mut inserted = false;
         if let Some(ref mut last_elem) = self.children.last_mut() {
@@ -69,6 +99,7 @@ impl TocElement {
     }
 
     /// Render element for Epub's toc.ncx format
+    #[doc(hidden)]
     pub fn render_epub(&self, mut offset: u32) -> (u32, String) {
         offset += 1;
         let id = offset;
@@ -100,6 +131,7 @@ impl TocElement {
     }
 
     /// Render element as a list element
+    #[doc(hidden)]
     pub fn render(&self, numbered: bool) -> String {
         let children = if self.children.is_empty() {
             String::new()
