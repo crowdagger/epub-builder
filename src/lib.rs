@@ -9,15 +9,16 @@
 //! it should take care of most of the boilerplate for you, leaving you only
 //! with the task of filling the actual content.
 //!
-//! # Example
+//! # Usage
 //!
-//! Add
+//! Add this in your `Cargo.toml` file:
 //!
 //! ```toml, ignore
+//! [dependencies]
 //! epub-builder: "0.1"
 //! ```
 //!
-//! to the dependencies section of your `Cargo.toml` file. Then:
+//! # Example
 //!
 //! ```ignore
 //! extern crate epub_builder;
@@ -75,6 +76,16 @@
 //! }
 //! ```
 //!
+//! # Conditional compilation
+//!
+//! EPUB files are Zip files, so we need to zip them. By default, this library features
+//! wrappers around both the [Rust zip library](https://crates.io/crates/zip) and calls
+//! to the `zip` command that may (or may not) be installed on your system.
+//!
+//! It is possible to disable the compilation (and the dependencies) of either of this
+//! wrapper, using `no-defaut-features`. (If you don't enable at least one of them this
+//! library will be pretty useless).
+//!
 //! # License
 //!
 //! This is free software, published under the [Mozilla Public License,
@@ -86,26 +97,32 @@ extern crate lazy_static;
 #[macro_use]
 extern crate error_chain;
 extern crate mustache;
-extern crate tempdir;
-extern crate zip as libzip;
 extern crate chrono;
 extern crate uuid;
+#[cfg(feature = "zip-command")]
+extern crate tempdir;
+#[cfg(feature = "zip-library")]
+extern crate zip as libzip;
 
 mod errors; 
 mod epub;
 mod zip;
-mod zip_command;
-mod zip_library;
 mod templates;
 mod toc;
 mod epub_content;
+#[cfg(feature = "zip-command")]
+mod zip_command;
+#[cfg(feature = "zip-library")]
+mod zip_library;
 
 pub use errors::*;
 pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
-pub use zip_command::ZipCommand;
-pub use zip_library::ZipLibrary;
 pub use zip::Zip;
 pub use toc::Toc;
 pub use toc::TocElement;
 pub use epub_content::EpubContent;
+#[cfg(feature = "zip-command")]
+pub use zip_command::ZipCommand;
+#[cfg(feature = "zip-library")]
+pub use zip_library::ZipLibrary;

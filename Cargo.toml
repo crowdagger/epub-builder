@@ -13,11 +13,16 @@ license = "MPL-2.0"
 name = "epub_builder"
 path = "src/lib.rs"
 
+[features]
+default = ["zip-command", "zip-library"]
+zip-command = ["tempdir"]
+zip-library = ["zip"]
+
 [dependencies]
 error-chain = "0.7"
 mustache = "0.8"
 lazy_static = "0.2"
 chrono = "0.2"
 uuid = { version = "0.3", features = ["v4"] }
-tempdir = "0.3" # Used by ZipCommand
-zip = "0.2" # Used by ZipLibrary
+tempdir = { version = "0.3", optional = true } 
+zip = { version = "0.2", optional = true } 
