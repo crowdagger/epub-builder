@@ -18,7 +18,9 @@ use chrono;
 use uuid;
 use mustache::MapBuilder;
 
-/// Represents a EPUB version
+/// Represents the EPUB version.
+///
+/// Currently, this library supports EPUB 2.0.1 and 3.0.1.
 #[derive(Debug, Copy, Clone)]
 pub enum EpubVersion {
     /// EPUB 2.0.1 format
@@ -79,6 +81,21 @@ impl Content {
 }
 
 /// Epub Builder
+///
+/// The main struct you'll need to use in this library. It is first created using
+/// a wrapper to zip files; then you add content to it, and finally you generate
+/// the EPUB file by calling the `generate` method.
+///
+/// ```
+/// use epub_builder::EpubBuilder;
+/// use epub_builder::ZipCommand;
+/// use std::io;
+///
+/// // "Empty" EPUB file
+/// let mut builder = EpubBuilder::new(ZipCommand::new().unwrap()).unwrap();
+/// builder.metadata("title", "Empty EPUB").unwrap();
+/// builder.generate(&mut io::stdout()).unwrap();
+/// ```
 #[derive(Debug)]
 pub struct EpubBuilder<Z:Zip> {
     version: EpubVersion,
@@ -124,21 +141,18 @@ impl<Z:Zip> EpubBuilder<Z> {
 
     /// Set some EPUB metadata
     ///
-    /// # Arguments
-    ///
-    /// * `metadata`: a (possibly empty) list (or other iterator) of (key, value) tuples
-    ///
-    /// # Metadata that are used by the EPUB generator
+    /// # Valid keys used by the EPUB builder
     ///
     /// * `author`: author(s) of the book;
     /// * `title`: title of the book;
     /// * `lang`: the language ot the book, quite important as EPUB renderers rely on it
     ///   for e.g. hyphenating words.
+    /// * `generator`: generator of the book (should be your program name);
+    /// * `toc_name`: the name to use for table of contents (by default, "Table of Contents");
     /// * `subject`;
     /// * `description`;
-    /// * `generator`: generator of the book (should be your program name);
-    /// * `license`
-    /// * `toc_name`
+    /// * `license`.
+
     pub fn metadata<S1: AsRef<str>, S2: Into<String>>(&mut self, key: S1, value: S2) -> Result<&mut Self> {
         match key.as_ref() {
             "author" => self.metadata.author = value.into(),
@@ -167,7 +181,12 @@ impl<Z:Zip> EpubBuilder<Z> {
 
     /// Adds an inline toc in the document.
     ///
-    /// If this method is called it adds a TOC similar to nav.xhtml but listed in the inline document.
+    /// If this method is called it adds a page that contains the table of contents
+    /// that appears in the document.
+    ///
+    /// The position where this table of contents will be inserted depends on when
+    /// you call this method: if you call it before adding any content, it will be
+    /// at the beginning, if you call it after, it will be at the end.
     pub fn inline_toc(&mut self) -> &mut Self {
         self.inline_toc = true;
         self.toc.add(TocElement::new("toc.xhtml", self.metadata.toc_name.as_ref()));
@@ -178,9 +197,11 @@ impl<Z:Zip> EpubBuilder<Z> {
     }
     
 
-    /// Add a resource
+    /// Add a resource to the EPUB file
     ///
-    /// Can be a picture, font, ...
+    /// This resource be a picture, a font, some CSS file, .... Unlike
+    /// `add_content`, files added this way won't appear in the linear
+    /// document.
     ///
     /// # Arguments
     ///
@@ -201,20 +222,38 @@ impl<Z:Zip> EpubBuilder<Z> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// epub.add_content(EpubContent::new("intro.xhtml", file));
+    /// ```
+    /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent};
+    /// let content = "Some content";
+    /// let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// // Add a chapter that won't be added to the Table of Contents 
+    /// builder.add_content(EpubContent::new("intro.xhtml", content.as_bytes())).unwrap();
     /// ```
     ///
-    /// ```ignore
-    /// epub.add_content(EpubContent::new("chapter_1.xhtml", File::open("chapter_1.xhtml")?)
+    /// ```
+    /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent, TocElement};
+    /// # let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// # let content = "Some content";
+    /// // Sets the title of a chapter so it is added to the Table of contents
+    /// // Also add information about its structure
+    /// builder.add_content(EpubContent::new("chapter_1.xhtml", content.as_bytes())
     ///                      .title("Chapter 1")
-    ///                      .child(TocElement::new("chapter_1.xhtml#1", "1.1")));
+    ///                      .child(TocElement::new("chapter_1.xhtml#1", "1.1"))).unwrap();
     /// ```
     ///
-    /// * `level`: the level this content will be added in the toc;
-    /// * `title`: the title of this content, as it should appear in the TOC;
-    /// * `inner_toc`: a table of contents descrbing the inner layout of the content;
-    /// * `content`: should be the contents of an XHTML file.
+    /// ```
+    /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent};
+    /// # let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// # let content = "Some content";
+    /// // Add a section, by setting the level to 2 (instead of the default value 1)
+    /// builder.add_content(EpubContent::new("section.xhtml", content.as_bytes())
+    ///                      .title("Section 1")
+    ///                      .level(2)).unwrap();
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// [`EpubContent`](struct.EpubContent.html)
     pub fn add_content<R: Read>(&mut self, content: EpubContent<R>)-> Result<&mut Self> {
         self.zip.write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
                             content.content)?;
@@ -229,6 +268,16 @@ impl<Z:Zip> EpubBuilder<Z> {
     }
 
     /// Generate the EPUB file and write it to the writer
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use epub_builder::{EpubBuilder, ZipLibrary};
+    /// let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// // Write the EPUB file into a Vec<u8>
+    /// let mut epub: Vec<u8> = vec!();
+    /// builder.generate(&mut epub).unwrap();
+    /// ```
     pub fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
         // If no styleesheet was provided, generate a dummy one
         if !self.stylesheet {
