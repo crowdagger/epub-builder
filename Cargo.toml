@@ -1,5 +1,5 @@
 [package]
-name = "epub"
+name = "epub-builder"
 version = "0.0.1-pre"
 authors = ["Elisabeth Henry <liz.henry@ouvaton.org>"]
 description = "A Rust library for generating EPUB files"
@@ -10,7 +10,7 @@ documentation = "https://docs.rs/epub"
 license = "MPL-2.0"
 
 [lib]
-name = "epub"
+name = "epub_builder"
 path = "src/lib.rs"
 
 [dependencies]
