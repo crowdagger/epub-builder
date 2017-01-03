@@ -152,6 +152,7 @@ pub use zip::Zip;
 pub use toc::Toc;
 pub use toc::TocElement;
 pub use epub_content::EpubContent;
+pub use epub_content::ReferenceType;
 #[cfg(feature = "zip-command")]
 pub use zip_command::ZipCommand;
 #[cfg(feature = "zip-library")]

@@ -6,6 +6,49 @@ use toc::TocElement;
 
 use std::io::Read;
 
+/// Represents the possible reference type of an EPUB page.
+///
+/// Used by the guide section of Epub2.
+///
+/// For more information, see http://www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.3
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ReferenceType {
+    /// The Book cover(s) (this refers to the cover PAGE, not the cover IMAGE)
+    Cover,
+    /// Page with title, author, publisher
+    TitlePage,
+    /// Table of contents
+    Toc,
+    /// Index
+    Index,
+    /// Glossary
+    Glossary,
+    /// Aknowledgements
+    Acknowledgements,
+    /// Bibliography
+    Bibliography,
+    /// No idea what this might be
+    Colophon,
+    /// Copyright page
+    Copyright,
+    /// Dedication
+    Dedication,
+    /// Epigraph
+    Epigraph,
+    /// Foreword
+    Foreword,
+    /// List of illustrations
+    Loi,
+    /// List of tables
+    Lot,
+    /// Notes
+    Notes,
+    /// Preface
+    Preface,
+    /// Beginning of the real content
+    Text
+}
+
 /// Represents a XHTML file that can be added to an EPUB document.
 ///
 /// This struct is designed to be used with the `add_content` method
@@ -32,6 +75,8 @@ pub struct EpubContent<R: Read> {
     pub toc: TocElement,
     /// The content
     pub content: R,
+    /// Properties. See [EpubProperties](enum.EpubProperties.html)
+    pub reftype: Option<ReferenceType>,
 }
 
 impl<R: Read> EpubContent<R> {
@@ -43,6 +88,7 @@ impl<R: Read> EpubContent<R> {
         EpubContent {
             content: content,
             toc: TocElement::new(href, ""),
+            reftype: None,
         }
     }
 
@@ -62,6 +108,16 @@ impl<R: Read> EpubContent<R> {
     /// Adds a sublevel to the toc
     pub fn child(mut self, elem: TocElement) -> Self {
         self.toc = self.toc.child(elem);
+        self
+    }
+
+    /// Sets reference type of this content
+    ///
+    /// If this is set, this will list this item as a reference in the guide section.
+    ///
+    /// See www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.3 
+    pub fn reftype(mut self, reftype: ReferenceType) -> Self {
+        self.reftype = Some(reftype);
         self
     }
 }

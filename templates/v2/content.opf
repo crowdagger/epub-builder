@@ -18,6 +18,7 @@
     {{{itemrefs}}}
   </spine>
   <guide>
-    <reference type="toc" title="{{{title}}}" href="nav.xhtml" />
+    <reference type="toc" title="{{{toc_name}}}" href="nav.xhtml" />
+    {{{guide}}}
   </guide>
 </package>

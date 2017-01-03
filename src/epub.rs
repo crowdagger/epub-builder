@@ -9,6 +9,7 @@ use zip::Zip;
 use toc::Toc;
 use toc::TocElement;
 use epub_content::EpubContent;
+use epub_content::ReferenceType;
 
 use std::io::Read;
 use std::io::Write;
@@ -68,6 +69,8 @@ struct Content {
     pub mime: String,
     pub itemref: bool,
     pub cover: bool,
+    pub reftype: Option<ReferenceType>,
+    pub title: String,
 }
 
 impl Content {
@@ -78,6 +81,8 @@ impl Content {
             mime: mime.into(),
             itemref: false,
             cover: false,
+            reftype: None,
+            title: String::new()
         }
     }
 }
@@ -285,6 +290,10 @@ impl<Z:Zip> EpubBuilder<Z> {
         let mut file = Content::new(content.toc.url.as_ref(),
                                 "application/xhtml+xml");
         file.itemref = true;
+        file.reftype = content.reftype;
+        if file.reftype.is_some() {
+            file.title = content.toc.title.clone();
+        }
         self.files.push(file);
         if !content.toc.title.is_empty() {
             self.toc.add(content.toc);
@@ -345,6 +354,7 @@ impl<Z:Zip> EpubBuilder<Z> {
 
         let mut items = String::new();
         let mut itemrefs = String::new();
+        let mut guide = String::new();
 
         for content in self.files.iter() {
             let id = if content.cover { String::from("cover") } else { to_id(&content.file) };
@@ -369,6 +379,34 @@ impl<Z:Zip> EpubBuilder<Z> {
                                            id = id));
                                             
             }
+            if let Some(reftype) = content.reftype {
+                use epub_content::ReferenceType::*;
+                let reftype = match reftype {
+                    Cover => "cover",
+                    TitlePage => "title-page",
+                    Toc => "toc",
+                    Index => "index",
+                    Glossary => "glossary",
+                    Acknowledgements => "acknowledgements",
+                    Bibliography => "bibliography",
+                    Colophon => "colophon",
+                    Copyright => "copyright",
+                    Dedication => "dedication",
+                    Epigraph => "epigraph",
+                    Foreword => "foreword",
+                    Loi => "loi",
+                    Lot => "lot",
+                    Notes => "notes",
+                    Preface => "preface",
+                    Text => "text",
+                };
+                guide.push_str(&format!("<reference type = \"{reftype}\" \
+                                         title = \"{title}\" \
+                                         href = \"{href}\" />",
+                                        reftype = reftype,
+                                        title = content.title,
+                                        href = content.file));
+            }
         }
 
         let data = MapBuilder::new()
@@ -376,11 +414,13 @@ impl<Z:Zip> EpubBuilder<Z> {
             .insert_str("author", &self.metadata.author)
             .insert_str("title", &self.metadata.title)
             .insert_str("generator", &self.metadata.generator)
+            .insert_str("toc_name", &self.metadata.toc_name)
             .insert_str("optional", optional)
             .insert_str("items", items)
             .insert_str("itemrefs", itemrefs)
             .insert_str("date", date)
             .insert_str("uuid", uuid)
+            .insert_str("guide", guide)
             .build();
 
         let mut content = vec!();
