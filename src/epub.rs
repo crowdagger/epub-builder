@@ -22,7 +22,7 @@ use mustache::MapBuilder;
 /// Represents the EPUB version.
 ///
 /// Currently, this library supports EPUB 2.0.1 and 3.0.1.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum EpubVersion {
     /// EPUB 2.0.1 format
     V20,
@@ -198,6 +198,8 @@ impl<Z:Zip> EpubBuilder<Z> {
         self.inline_toc = true;
         self.toc.add(TocElement::new("toc.xhtml", self.metadata.toc_name.as_ref()));
         let mut file = Content::new("toc.xhtml", "application/xhtml+xml");
+        file.reftype = Some(ReferenceType::Toc);
+        file.title = self.metadata.toc_name.clone();
         file.itemref = true;
         self.files.push(file);
         self
@@ -457,10 +459,48 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// Render nav.xhtml
     fn render_nav(&mut self, numbered: bool) -> Result<Vec<u8>> {
         let content = self.toc.render(numbered);
+        let mut landmarks = String::new();
+        if self.version > EpubVersion::V20 {
+            for file in self.files.iter() {
+                if let Some(ref reftype) = file.reftype {
+                    use ReferenceType::*;
+                    let reftype = match *reftype {
+                        Cover => "cover",
+                        Text => "bodymatter",
+                        Toc => "toc",
+                        Bibliography => "bibliography",
+                        Epigraph => "epigraph",
+                        Foreword => "foreword",
+                        Preface => "preface",
+                        Notes => "endnotes",
+                        Loi => "loi",
+                        Lot => "lot",
+                        Colophon => "colophon",
+                        TitlePage => "titlepage",
+                        Index => "index",
+                        Glossary => "glossary",
+                        Copyright => "copyright-page",
+                        Acknowledgements => "acknowledgements",
+                        Dedication => "dedication"
+                    };
+                    landmarks.push_str(&format!("<li><a epub:type=\"{reftype}\" \
+                                                 href = \"{href}\">\
+                                                 {title}</a></li>\n",
+                                                reftype = reftype,
+                                                href = file.file,
+                                                title = file.title));
+                }
+            }
+        }
+        if !landmarks.is_empty() {
+            landmarks = format!("<ol>\n{}\n</ol>", landmarks);
+        }
+        
         let data = MapBuilder::new()
             .insert_str("content", content)
             .insert_str("toc_name", &self.metadata.toc_name)
             .insert_str("generator", &self.metadata.generator)
+            .insert_str("landmarks", landmarks)
             .build();
 
         let mut res = vec!();
