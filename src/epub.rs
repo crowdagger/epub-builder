@@ -402,7 +402,7 @@ impl<Z:Zip> EpubBuilder<Z> {
                 };
                 guide.push_str(&format!("<reference type = \"{reftype}\" \
                                          title = \"{title}\" \
-                                         href = \"{href}\" />",
+                                         href = \"{href}\" />\n",
                                         reftype = reftype,
                                         title = content.title,
                                         href = content.file));
