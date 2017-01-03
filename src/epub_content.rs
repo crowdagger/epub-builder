@@ -115,7 +115,19 @@ impl<R: Read> EpubContent<R> {
     ///
     /// If this is set, this will list this item as a reference in the guide section.
     ///
-    /// See www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.3 
+    /// See www.idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.3
+    ///
+    /// # Example
+    ///
+    /// Reference an item as the title page:
+    ///
+    /// ```
+    /// use epub_builder::{EpubContent, ReferenceType};
+    /// let dummy = "Should be a XHTML file";
+    /// let item = EpubContent::new("title.xhtml", dummy.as_bytes())
+    ///      .title("Title")
+    ///      .reftype(ReferenceType::TitlePage);
+    /// ```
     pub fn reftype(mut self, reftype: ReferenceType) -> Self {
         self.reftype = Some(reftype);
         self
