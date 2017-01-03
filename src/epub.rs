@@ -67,6 +67,7 @@ struct Content {
     pub file: String,
     pub mime: String,
     pub itemref: bool,
+    pub cover: bool,
 }
 
 impl Content {
@@ -76,6 +77,7 @@ impl Content {
             file: file.into(),
             mime: mime.into(),
             itemref: false,
+            cover: false,
         }
     }
 }
@@ -213,11 +215,27 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// * `content`: the resource to include
     /// * `mime_type`: the mime type of this file, e.g. "image/png".
     pub fn add_resource<R: Read, P: AsRef<Path>, S: Into<String>>(&mut self,
+                                                                  path: P,
+                                                                  content: R,
+                                                                  mime_type: S) -> Result<&mut Self> {
+        self.zip.write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
+        self.files.push(Content::new(format!("{}", path.as_ref().display()), mime_type));
+        Ok(self)
+    }
+
+    /// Add a cover image to the EPUB.
+    ///
+    /// This works similarly to adding the image as a resource with the `add_resource`
+    /// method, except, it signals it in the Manifest secton so it is displayed as the
+    /// cover by Ereaders
+    pub fn add_cover_image<R: Read, P: AsRef<Path>, S: Into<String>>(&mut self,
                                                                      path: P,
                                                                      content: R,
                                                                      mime_type: S) -> Result<&mut Self> {
         self.zip.write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
-        self.files.push(Content::new(format!("{}", path.as_ref().display()), mime_type));
+        let mut file = Content::new(format!("{}", path.as_ref().display()), mime_type);
+        file.cover = true;
+        self.files.push(file);
         Ok(self)
     }
     
@@ -329,15 +347,25 @@ impl<Z:Zip> EpubBuilder<Z> {
         let mut itemrefs = String::new();
 
         for content in self.files.iter() {
+            let id = if content.cover { String::from("cover") } else { to_id(&content.file) };
+            let properties = match (self.version, content.cover) {
+                (EpubVersion::V30, true) => "cover-image",
+                _ => "",
+            };
+            if content.cover {
+                optional.push_str("<meta name = \"cover\" content = \"cover\" />\n");
+            }
             items.push_str(&format!("<item media-type = \"{mime}\" \
+                                     {properties} \
                                      id = \"{id}\" \
                                      href = \"{href}\" />\n",
+                                    properties = properties,
                                     mime = content.mime,
-                                    id = to_id(&content.file),
+                                    id = id,
                                     href = content.file));
             if content.itemref {
                 itemrefs.push_str(&format!("<itemref idref = \"{id}\" />\n",
-                                           id = to_id(&content.file)));
+                                           id = id));
                                             
             }
         }

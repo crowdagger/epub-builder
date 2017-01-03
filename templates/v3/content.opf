@@ -10,7 +10,6 @@
     <meta refines="#epub-creator-1" property="role"
           scheme="marc:relators">aut</meta>
     <meta property="dcterms:modified">{{{date}}}</meta>
-
     {{{optional}}}
   </metadata>
   <manifest>
