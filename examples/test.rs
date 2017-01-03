@@ -4,6 +4,7 @@ use epub_builder::EpubBuilder;
 use epub_builder::Result;
 use epub_builder::ZipLibrary;
 use epub_builder::EpubContent;
+use epub_builder::ReferenceType;
 use epub_builder::TocElement;
 
 use std::io;
@@ -13,7 +14,7 @@ use std::io::Write;
 fn run() -> Result<()> {
     // Some dummy content to fill our books
     let dummy_content = "Dummy content. This should be valid XHTML if you want a valid EPUB!";
-    let dummy_cover = "Not really a PNG image";
+    let dummy_image = "Not really a PNG image";
     let dummy_css = "body { background-color: pink }";
 
     // Create a new EpubBuilder using the zip library
@@ -23,8 +24,18 @@ fn run() -> Result<()> {
         .metadata("title", "Dummy Book")?
     // Set the stylesheet (create a "stylesheet.css" file in EPUB that is used by some generated files)
         .stylesheet(dummy_css.as_bytes())?
+    // Add a image cover file
+        .add_cover_image("cover.png", dummy_image.as_bytes(), "image/png")?
     // Add a resource that is not part of the linear document structure
-        .add_resource("cover.png", dummy_cover.as_bytes(), "image/png")?
+        .add_resource("some_image.png", dummy_image.as_bytes(), "image/png")?
+    // Add a cover page
+        .add_content(EpubContent::new("cover.xhtml", dummy_content.as_bytes())
+                     .title("Cover")
+                     .reftype(ReferenceType::Cover))?
+    // Add a title page
+        .add_content(EpubContent::new("title.xhtml", dummy_content.as_bytes())
+                     .title("Title")
+                     .reftype(ReferenceType::TitlePage))?
     // Add a chapter
         .add_content(EpubContent::new("chapter_1.xhtml", dummy_content.as_bytes())
                      .title("Chapter 1"))?
