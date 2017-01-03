@@ -112,7 +112,7 @@ wrappers around both the [Rust zip library](https://crates.io/crates/zip) and ca
 to the `zip` command that may (or may not) be installed on your system.
 
 It is possible to disable the compilation (and the dependencies) of either of these
-wrappers, using `no-defaut-features`. (If you don't enable at least one of them this
+wrappers, using `no-default-features`. (If you don't enable at least one of them this
 library will be pretty useless).
 
 ## License
