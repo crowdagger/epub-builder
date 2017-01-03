@@ -353,7 +353,8 @@ impl<Z:Zip> EpubBuilder<Z> {
                 _ => "",
             };
             if content.cover {
-                optional.push_str("<meta name = \"cover\" content = \"cover\" />\n");
+                optional.push_str(&format!("<meta name = \"cover\" content = \"{}\" />\n",
+                                           content.file));
             }
             items.push_str(&format!("<item media-type = \"{mime}\" \
                                      {properties} \
