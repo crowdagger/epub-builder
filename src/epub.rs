@@ -359,7 +359,7 @@ impl<Z:Zip> EpubBuilder<Z> {
         let mut guide = String::new();
 
         for content in self.files.iter() {
-            let id = if content.cover { String::from("cover") } else { to_id(&content.file) };
+            let id = if content.cover { String::from("cover-image") } else { to_id(&content.file) };
             let properties = match (self.version, content.cover) {
                 (EpubVersion::V30, true) => "cover-image",
                 _ => "",
