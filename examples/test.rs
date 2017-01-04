@@ -36,9 +36,10 @@ fn run() -> Result<()> {
         .add_content(EpubContent::new("title.xhtml", dummy_content.as_bytes())
                      .title("Title")
                      .reftype(ReferenceType::TitlePage))?
-    // Add a chapter
+    // Add a chapter, mark it as beginning of the "real content"
         .add_content(EpubContent::new("chapter_1.xhtml", dummy_content.as_bytes())
-                     .title("Chapter 1"))?
+                     .title("Chapter 1")
+                     .reftype(ReferenceType::Text))?
     // Add a second chapter; this one has more toc information about its internal structure
         .add_content(EpubContent::new("chapter_2.xhtml", dummy_content.as_bytes())
                      .title("Chapter 2")
