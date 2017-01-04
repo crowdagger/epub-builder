@@ -28,17 +28,17 @@
 //! use epub_builder::ZipLibrary;
 //! use epub_builder::EpubContent;
 //! use epub_builder::TocElement;
-//! 
+//!
 //! use std::io;
 //! use std::io::Write;
-//! 
+//!
 //! // Try to print Zip file to stdout
 //! fn run() -> Result<()> {
 //!     // Some dummy content to fill our books
 //!     let dummy_content = "Dummy content. This should be valid XHTML if you want a valid EPUB!";
 //!     let dummy_cover = "Not really a PNG image";
 //!     let dummy_css = "body { background-color: pink }";
-//! 
+//!
 //!     // Create a new EpubBuilder using the zip library
 //!     EpubBuilder::new(ZipLibrary::new())?
 //!     // Set some metadata
@@ -67,11 +67,13 @@
 //!         .generate(&mut io::sink())?;
 //!     Ok(())
 //! }
-//! 
+//!
 //! fn main() {
 //!     match run() {
-//!         Ok(_) => writeln!(&mut io::stdout(), "Successfully wrote epub document to stdout!").unwrap(),
-//!         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err).unwrap(),
+//!         Ok(_) => writeln!(&mut io::stdout(), "Successfully wrote epub document to stdout!")
+//!                      .unwrap(),
+//!         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err)
+//!                         .unwrap(),
 //!     };
 //! }
 //! ```
@@ -99,7 +101,7 @@
 //! ## Missing features
 //!
 //! There are various EPUB features that `epub-builder` doesn't handle. Particularly,
-//! there are some metadata that could be better 
+//! there are some metadata that could be better
 //! handled (e.g. support multiple authors, multiple languages in the document and so on).
 //!
 //! There are also various things that aren't in the scope of this library: it doesn't
@@ -134,7 +136,7 @@ extern crate tempdir;
 #[cfg(feature = "zip-library")]
 extern crate zip as libzip;
 
-mod errors; 
+mod errors;
 mod epub;
 mod zip;
 mod templates;

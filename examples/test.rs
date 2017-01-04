@@ -58,7 +58,11 @@ fn run() -> Result<()> {
 
 fn main() {
     match run() {
-        Ok(_) => writeln!(&mut io::stderr(), "Successfully wrote epub document to stdout!").unwrap(),
+        Ok(_) => {
+            writeln!(&mut io::stderr(),
+                     "Successfully wrote epub document to stdout!")
+                .unwrap()
+        }
         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err).unwrap(),
     };
 }

@@ -34,16 +34,15 @@ pub struct ZipCommand {
 impl ZipCommand {
     /// Creates a new ZipCommand, using default setting to create a temporary directory.
     pub fn new() -> Result<ZipCommand> {
-        let temp_dir = TempDir::new("epub")
-            .chain_err(|| "could not create temporary directory")?;
+        let temp_dir = TempDir::new("epub").chain_err(|| "could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir: temp_dir,
-            files: vec!()
+            files: vec![],
         };
         Ok(zip)
     }
-    
+
     /// Creates a new ZipCommand, specifying where to create a temporary directory.
     ///
     /// # Arguments
@@ -54,7 +53,7 @@ impl ZipCommand {
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir: temp_dir,
-            files: vec!()
+            files: vec![],
         };
         Ok(zip)
     }
@@ -68,47 +67,49 @@ impl ZipCommand {
 
 
 impl Zip for ZipCommand {
-    fn write_file<P:AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
+    fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
         let path = path.as_ref();
         if path.starts_with("..") || path.is_absolute() {
-            bail!("file {file} refers to a path outside the temporary directory. This is verbotten!");
+            bail!("file {file} refers to a path outside the temporary directory. This is \
+                   verbotten!");
         }
 
         let dest_file = self.temp_dir.path().join(path);
         let dest_dir = dest_file.parent().unwrap();
         if !fs::metadata(dest_dir).is_ok() {
             // dir does not exist, create it
-            DirBuilder::new()
-                .recursive(true)
+            DirBuilder::new().recursive(true)
                 .create(&dest_dir)
-                .chain_err(|| format!("could not create temporary directory in {path}",
-                                      path = dest_dir.display()))?;
+                .chain_err(|| {
+                    format!("could not create temporary directory in {path}",
+                            path = dest_dir.display())
+                })?;
         }
 
 
-        let mut f = File::create(&dest_file)
-            .chain_err(|| format!("could not write to temporary file {file}",
-                                           file = path.display()))?;
-        io::copy(&mut content, &mut f)
-            .chain_err(|| format!("could not write to temporary file {file}",
-                                  file = path.display()))?;
+        let mut f = File::create(&dest_file).chain_err(|| {
+                format!("could not write to temporary file {file}",
+                        file = path.display())
+            })?;
+        io::copy(&mut content, &mut f).chain_err(|| {
+                format!("could not write to temporary file {file}",
+                        file = path.display())
+            })?;
         self.files.push(path.to_path_buf());
         Ok(())
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
         let mut command = Command::new(&self.command);
-        command
-            .current_dir(self.temp_dir.path())
+        command.current_dir(self.temp_dir.path())
             .arg("-X")
             .arg("-");
         for file in self.files.iter() {
             command.arg(format!("{}", file.display()));
         }
-            
+
         let output = command.output()
-            .chain_err(|| format!("failed to run command {name}",
-                                  name = self.command))?;
+            .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if output.status.success() {
             to.write_all(output.stdout.as_ref())
                 .chain_err(|| "error writing result of the zip command")?;

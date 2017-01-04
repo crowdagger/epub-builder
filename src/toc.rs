@@ -29,13 +29,12 @@ impl TocElement {
     /// Creates a new element of the toc
     ///
     /// By default, the element's level is `1` and it has no children.
-    pub fn new<S1: Into<String>, S2: Into<String>>(url: S1,
-                                                   title: S2) -> TocElement {
+    pub fn new<S1: Into<String>, S2: Into<String>>(url: S1, title: S2) -> TocElement {
         TocElement {
             level: 1,
             url: url.into(),
             title: title.into(),
-            children: vec!(),
+            children: vec![],
         }
     }
 
@@ -123,11 +122,11 @@ impl TocElement {
   <content src = \"{url}\" />
 {children}
 </navPoint>",
-                id = id,
-                title = self.title,
-                url = self.url,
-                children = children))
-                
+                 id = id,
+                 title = self.title,
+                 url = self.url,
+                 children = children))
+
     }
 
     /// Render element as a list element
@@ -185,9 +184,7 @@ pub struct Toc {
 impl Toc {
     /// Creates a new, empty, Toc
     pub fn new() -> Toc {
-        Toc {
-            elements: vec![],
-        }
+        Toc { elements: vec![] }
     }
 
     /// Returns `true` if the toc is empty, `false` else.
@@ -259,7 +256,7 @@ impl Toc {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//                                   TESTS                                     //
+///                                  TESTS                                     //
 /////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -314,9 +311,9 @@ fn toc_epub_simple() {
 fn toc_epub_simple_sublevels() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "1"));
-    toc.add(TocElement::new("#1.1","1.1").level(2));
+    toc.add(TocElement::new("#1.1", "1.1").level(2));
     toc.add(TocElement::new("#2", "2"));
-    toc.add(TocElement::new("#2.1","2.1").level(2));
+    toc.add(TocElement::new("#2.1", "2.1").level(2));
     let actual = toc.render_epub();
     let expected = "
 <navPoint id = \"navPoint-1\">

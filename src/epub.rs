@@ -75,14 +75,17 @@ struct Content {
 
 impl Content {
     /// Create a new content file
-    pub fn new<S1:Into<String>, S2: Into<String>>(file: S1, mime: S2) -> Content {
+    pub fn new<S1, S2>(file: S1, mime: S2) -> Content
+        where S1: Into<String>,
+              S2: Into<String>
+    {
         Content {
             file: file.into(),
             mime: mime.into(),
             itemref: false,
             cover: false,
             reftype: None,
-            title: String::new()
+            title: String::new(),
         }
     }
 }
@@ -104,7 +107,7 @@ impl Content {
 /// builder.generate(&mut io::stdout()).unwrap();
 /// ```
 #[derive(Debug)]
-pub struct EpubBuilder<Z:Zip> {
+pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
     zip: Z,
     files: Vec<Content>,
@@ -114,23 +117,25 @@ pub struct EpubBuilder<Z:Zip> {
     inline_toc: bool,
 }
 
-impl<Z:Zip> EpubBuilder<Z> {
+impl<Z: Zip> EpubBuilder<Z> {
     /// Create a new default EPUB Builder
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
             zip: zip,
-            files: vec!(),
+            files: vec![],
             metadata: Metadata::new(),
             toc: Toc::new(),
             stylesheet: false,
             inline_toc: false,
         };
-        
+
         // Write mimetype upfront
         epub.zip.write_file("mimetype", "application/epub+zip".as_bytes())?;
         epub.zip.write_file("META-INF/container.xml", templates::CONTAINER)?;
-        epub.zip.write_file("META-INF/com.apple.ibooks.display-options.xml", templates::IBOOKS)?;
+        epub.zip
+            .write_file("META-INF/com.apple.ibooks.display-options.xml",
+                        templates::IBOOKS)?;
 
         Ok(epub)
     }
@@ -160,7 +165,10 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// * `description`;
     /// * `license`.
 
-    pub fn metadata<S1: AsRef<str>, S2: Into<String>>(&mut self, key: S1, value: S2) -> Result<&mut Self> {
+    pub fn metadata<S1, S2>(&mut self, key: S1, value: S2) -> Result<&mut Self>
+        where S1: AsRef<str>,
+              S2: Into<String>
+    {
         match key.as_ref() {
             "author" => self.metadata.author = value.into(),
             "title" => self.metadata.title = value.into(),
@@ -180,7 +188,7 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// This content will be written in a `stylesheet.css` file; it is used by
     /// some pages (such as nav.xhtml), you don't have use it in your documents though it
     /// makes sense to also do so.
-    pub fn stylesheet<R:Read>(&mut self, content: R) -> Result<&mut Self> {
+    pub fn stylesheet<R: Read>(&mut self, content: R) -> Result<&mut Self> {
         self.add_resource("stylesheet.css", content, "text/css")?;
         self.stylesheet = true;
         Ok(self)
@@ -204,7 +212,7 @@ impl<Z:Zip> EpubBuilder<Z> {
         self.files.push(file);
         self
     }
-    
+
 
     /// Add a resource to the EPUB file
     ///
@@ -221,10 +229,15 @@ impl<Z:Zip> EpubBuilder<Z> {
     ///   e.g. `data/image_0.png`
     /// * `content`: the resource to include
     /// * `mime_type`: the mime type of this file, e.g. "image/png".
-    pub fn add_resource<R: Read, P: AsRef<Path>, S: Into<String>>(&mut self,
-                                                                  path: P,
-                                                                  content: R,
-                                                                  mime_type: S) -> Result<&mut Self> {
+    pub fn add_resource<R, P, S>(&mut self,
+                                 path: P,
+                                 content: R,
+                                 mime_type: S)
+                                 -> Result<&mut Self>
+        where R: Read,
+              P: AsRef<Path>,
+              S: Into<String>
+    {
         self.zip.write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
         self.files.push(Content::new(format!("{}", path.as_ref().display()), mime_type));
         Ok(self)
@@ -235,17 +248,22 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// This works similarly to adding the image as a resource with the `add_resource`
     /// method, except, it signals it in the Manifest secton so it is displayed as the
     /// cover by Ereaders
-    pub fn add_cover_image<R: Read, P: AsRef<Path>, S: Into<String>>(&mut self,
-                                                                     path: P,
-                                                                     content: R,
-                                                                     mime_type: S) -> Result<&mut Self> {
+    pub fn add_cover_image<R, P, S>(&mut self,
+                                    path: P,
+                                    content: R,
+                                    mime_type: S)
+                                    -> Result<&mut Self>
+        where R: Read,
+              P: AsRef<Path>,
+              S: Into<String>
+    {
         self.zip.write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
         let mut file = Content::new(format!("{}", path.as_ref().display()), mime_type);
         file.cover = true;
         self.files.push(file);
         Ok(self)
     }
-    
+
     /// Add a XHTML content file that will be added to the EPUB.
     ///
     /// # Examples
@@ -254,7 +272,7 @@ impl<Z:Zip> EpubBuilder<Z> {
     /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent};
     /// let content = "Some content";
     /// let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
-    /// // Add a chapter that won't be added to the Table of Contents 
+    /// // Add a chapter that won't be added to the Table of Contents
     /// builder.add_content(EpubContent::new("intro.xhtml", content.as_bytes())).unwrap();
     /// ```
     ///
@@ -286,11 +304,11 @@ impl<Z:Zip> EpubBuilder<Z> {
     ///
     /// * [`EpubContent`](struct.EpubContent.html)
     /// * the `add_resource` method, to add other resources in the EPUB file.
-    pub fn add_content<R: Read>(&mut self, content: EpubContent<R>)-> Result<&mut Self> {
-        self.zip.write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
-                            content.content)?;
-        let mut file = Content::new(content.toc.url.as_ref(),
-                                "application/xhtml+xml");
+    pub fn add_content<R: Read>(&mut self, content: EpubContent<R>) -> Result<&mut Self> {
+        self.zip
+            .write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
+                        content.content)?;
+        let mut file = Content::new(content.toc.url.as_ref(), "application/xhtml+xml");
         file.itemref = true;
         file.reftype = content.reftype;
         if file.reftype.is_some() {
@@ -334,7 +352,7 @@ impl<Z:Zip> EpubBuilder<Z> {
             self.zip.write_file("OEBPS/toc.xhtml", &bytes as &[u8])?;
         }
 
-        
+
         self.zip.generate(to)?;
         Ok(())
     }
@@ -359,7 +377,11 @@ impl<Z:Zip> EpubBuilder<Z> {
         let mut guide = String::new();
 
         for content in self.files.iter() {
-            let id = if content.cover { String::from("cover-image") } else { to_id(&content.file) };
+            let id = if content.cover {
+                String::from("cover-image")
+            } else {
+                to_id(&content.file)
+            };
             let properties = match (self.version, content.cover) {
                 (EpubVersion::V30, true) => "cover-image",
                 _ => "",
@@ -377,9 +399,8 @@ impl<Z:Zip> EpubBuilder<Z> {
                                     id = id,
                                     href = content.file));
             if content.itemref {
-                itemrefs.push_str(&format!("<itemref idref = \"{id}\" />\n",
-                                           id = id));
-                                            
+                itemrefs.push_str(&format!("<itemref idref = \"{id}\" />\n", id = id));
+
             }
             if let Some(reftype) = content.reftype {
                 use epub_content::ReferenceType::*;
@@ -425,21 +446,20 @@ impl<Z:Zip> EpubBuilder<Z> {
             .insert_str("guide", guide)
             .build();
 
-        let mut content = vec!();
+        let mut content = vec![];
         let res = match self.version {
             EpubVersion::V20 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
             EpubVersion::__NonExhaustive => unreachable!(),
         };
-        
 
-        res
-            .chain_err(|| "could not render template for content.opf")?;
+
+        res.chain_err(|| "could not render template for content.opf")?;
 
         Ok(content)
     }
 
-        /// Render toc.ncx
+    /// Render toc.ncx
     fn render_toc(&mut self) -> Result<Vec<u8>> {
         let mut nav_points = String::new();
 
@@ -481,7 +501,7 @@ impl<Z:Zip> EpubBuilder<Z> {
                         Glossary => "glossary",
                         Copyright => "copyright-page",
                         Acknowledgements => "acknowledgements",
-                        Dedication => "dedication"
+                        Dedication => "dedication",
                     };
                     landmarks.push_str(&format!("<li><a epub:type=\"{reftype}\" \
                                                  href = \"{href}\">\
@@ -495,7 +515,7 @@ impl<Z:Zip> EpubBuilder<Z> {
         if !landmarks.is_empty() {
             landmarks = format!("<ol>\n{}\n</ol>", landmarks);
         }
-        
+
         let data = MapBuilder::new()
             .insert_str("content", content)
             .insert_str("toc_name", &self.metadata.toc_name)
@@ -503,13 +523,13 @@ impl<Z:Zip> EpubBuilder<Z> {
             .insert_str("landmarks", landmarks)
             .build();
 
-        let mut res = vec!();
+        let mut res = vec![];
         let eh = match self.version {
             EpubVersion::V20 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
             EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
             EpubVersion::__NonExhaustive => unreachable!(),
         };
-        
+
         eh.chain_err(|| "error rendering nav.xhtml template")?;
         Ok(res)
     }

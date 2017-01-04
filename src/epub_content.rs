@@ -46,7 +46,7 @@ pub enum ReferenceType {
     /// Preface
     Preface,
     /// Beginning of the real content
-    Text
+    Text,
 }
 
 /// Represents a XHTML file that can be added to an EPUB document.

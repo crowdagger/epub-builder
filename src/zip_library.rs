@@ -31,9 +31,7 @@ impl fmt::Debug for ZipLibrary {
 impl ZipLibrary {
     /// Creates a new wrapper for zip library
     pub fn new() -> ZipLibrary {
-        ZipLibrary {
-            writer: ZipWriter::new(Cursor::new(vec!()))
-        }
+        ZipLibrary { writer: ZipWriter::new(Cursor::new(vec![])) }
     }
 }
 
@@ -42,9 +40,9 @@ impl Zip for ZipLibrary {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
         let file = format!("{}", path.as_ref().display());
         let options = FileOptions::default();
-        self.writer.start_file(format!("{}", file), options)
-            .chain_err(|| format!("could not create file '{}' in epub",
-                                  file))?;
+        self.writer
+            .start_file(format!("{}", file), options)
+            .chain_err(|| format!("could not create file '{}' in epub", file))?;
         io::copy(&mut content, &mut self.writer)
             .chain_err(|| format!("could not write file '{}' in epub",
                                   file))?;
@@ -52,7 +50,8 @@ impl Zip for ZipLibrary {
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
-        let cursor = self.writer.finish()
+        let cursor = self.writer
+            .finish()
             .chain_err(|| "error writing zip file")?;
         let bytes = cursor.into_inner();
         to.write_all(bytes.as_ref())
