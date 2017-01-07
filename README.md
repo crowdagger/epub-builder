@@ -14,7 +14,7 @@ Add this in your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-epub-builder: "0.1"
+epub-builder = "0.1"
 ```
 
 ## Example
