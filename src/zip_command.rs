@@ -104,7 +104,7 @@ impl Zip for ZipCommand {
         command.current_dir(self.temp_dir.path())
             .arg("-X")
             .arg("-");
-        for file in self.files.iter() {
+        for file in &self.files {
             command.arg(format!("{}", file.display()));
         }
 

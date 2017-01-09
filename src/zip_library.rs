@@ -8,6 +8,7 @@ use zip::Zip;
 
 use std::io;
 use std::fmt;
+use std::default;
 use std::path::Path;
 use std::io::Read;
 use std::io::Write;
@@ -27,6 +28,12 @@ impl fmt::Debug for ZipLibrary {
     }
 }
 
+impl default::Default for ZipLibrary {
+    fn default() -> ZipLibrary {
+        ZipLibrary::new() 
+    }
+}
+
 
 impl ZipLibrary {
     /// Creates a new wrapper for zip library
@@ -41,7 +48,7 @@ impl Zip for ZipLibrary {
         let file = format!("{}", path.as_ref().display());
         let options = FileOptions::default();
         self.writer
-            .start_file(format!("{}", file), options)
+            .start_file(file.clone(), options)
             .chain_err(|| format!("could not create file '{}' in epub", file))?;
         io::copy(&mut content, &mut self.writer)
             .chain_err(|| format!("could not write file '{}' in epub",

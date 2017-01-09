@@ -47,7 +47,7 @@ impl TocElement {
     /// Change level, recursively, so the structure keeps having some sense
     fn level_up(&mut self, level: i32) {
         self.level = level;
-        for mut child in self.children.iter_mut() {
+        for mut child in &mut self.children {
             if child.level <= self.level {
                 child.level_up(level + 1);
             }
@@ -175,7 +175,7 @@ impl TocElement {
 ///    // render the toc (non-numbered list) and returns a string
 ///    .render(false);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Toc {
     /// The elements composing the TOC
     pub elements: Vec<TocElement>,

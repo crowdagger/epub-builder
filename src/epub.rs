@@ -131,7 +131,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         };
 
         // Write mimetype upfront
-        epub.zip.write_file("mimetype", "application/epub+zip".as_bytes())?;
+        epub.zip.write_file("mimetype", b"application/epub+zip".as_ref())?;
         epub.zip.write_file("META-INF/container.xml", templates::CONTAINER)?;
         epub.zip
             .write_file("META-INF/com.apple.ibooks.display-options.xml",
@@ -335,7 +335,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn generate<W: Write>(&mut self, to: W) -> Result<()> {
         // If no styleesheet was provided, generate a dummy one
         if !self.stylesheet {
-            self.stylesheet("".as_bytes())?;
+            self.stylesheet(b"".as_ref())?;
         }
         /// Render content.opf
         let bytes = self.render_opf()?;
@@ -376,7 +376,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         let mut itemrefs = String::new();
         let mut guide = String::new();
 
-        for content in self.files.iter() {
+        for content in &self.files {
             let id = if content.cover {
                 String::from("cover-image")
             } else {
@@ -481,7 +481,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         let content = self.toc.render(numbered);
         let mut landmarks = String::new();
         if self.version > EpubVersion::V20 {
-            for file in self.files.iter() {
+            for file in &self.files {
                 if let Some(ref reftype) = file.reftype {
                     use ReferenceType::*;
                     let reftype = match *reftype {
