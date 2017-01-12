@@ -11,8 +11,9 @@ use toc::TocElement;
 use epub_content::EpubContent;
 use epub_content::ReferenceType;
 
+use std::io;
 use std::io::Read;
-use std::io::Write;
+use std::fmt::Write;
 use std::path::Path;
 
 use chrono;
@@ -332,7 +333,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// let mut epub: Vec<u8> = vec!();
     /// builder.generate(&mut epub).unwrap();
     /// ```
-    pub fn generate<W: Write>(&mut self, to: W) -> Result<()> {
+    pub fn generate<W: io::Write>(&mut self, to: W) -> Result<()> {
         // If no styleesheet was provided, generate a dummy one
         if !self.stylesheet {
             self.stylesheet(b"".as_ref())?;
@@ -361,13 +362,13 @@ impl<Z: Zip> EpubBuilder<Z> {
     fn render_opf(&mut self) -> Result<Vec<u8>> {
         let mut optional = String::new();
         if let Some(ref desc) = self.metadata.description {
-            optional.push_str(&format!("<dc:description>{}</dc:description>\n", desc));
+            write!(optional, "<dc:description>{}</dc:description>\n", desc)?;
         }
         if let Some(ref subject) = self.metadata.subject {
-            optional.push_str(&format!("<dc:subject>{}</dc:subject>\n", subject));
+            write!(optional, "<dc:subject>{}</dc:subject>\n", subject)?;
         }
         if let Some(ref rights) = self.metadata.license {
-            optional.push_str(&format!("<dc:rights>{}</dc:rights>\n", rights));
+            write!(optional, "<dc:rights>{}</dc:rights>\n", rights)?;
         }
         let date = chrono::UTC::now().format("%Y-%m-%dT%H:%M:%SZ");
         let uuid = uuid::Uuid::new_v4().urn().to_string();
@@ -387,20 +388,19 @@ impl<Z: Zip> EpubBuilder<Z> {
                 _ => "",
             };
             if content.cover {
-                optional.push_str(&format!("<meta name = \"cover\" content = \"{}\" />\n",
-                                           content.file));
+                write!(optional,
+                       "<meta name = \"cover\" content = \"{}\" />\n",
+                       content.file)?;
             }
-            items.push_str(&format!("<item media-type = \"{mime}\" \
-                                     {properties} \
-                                     id = \"{id}\" \
-                                     href = \"{href}\" />\n",
-                                    properties = properties,
-                                    mime = content.mime,
-                                    id = id,
-                                    href = content.file));
+            write!(items,
+                   "<item media-type = \"{mime}\" {properties} \
+                    id = \"{id}\" href = \"{href}\" />\n",
+                   properties = properties,
+                   mime = content.mime,
+                   id = id,
+                   href = content.file)?;
             if content.itemref {
-                itemrefs.push_str(&format!("<itemref idref = \"{id}\" />\n", id = id));
-
+                write!(itemrefs, "<itemref idref = \"{id}\" />\n", id = id)?;
             }
             if let Some(reftype) = content.reftype {
                 use epub_content::ReferenceType::*;
@@ -423,12 +423,11 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Preface => "preface",
                     Text => "text",
                 };
-                guide.push_str(&format!("<reference type = \"{reftype}\" \
-                                         title = \"{title}\" \
-                                         href = \"{href}\" />\n",
-                                        reftype = reftype,
-                                        title = content.title,
-                                        href = content.file));
+                write!(guide,
+                       "<reference type = \"{reftype}\" title = \"{title}\" href = \"{href}\" />\n",
+                       reftype = reftype,
+                       title = content.title,
+                       href = content.file)?;
             }
         }
 
@@ -503,12 +502,12 @@ impl<Z: Zip> EpubBuilder<Z> {
                         Acknowledgements => "acknowledgements",
                         Dedication => "dedication",
                     };
-                    landmarks.push_str(&format!("<li><a epub:type=\"{reftype}\" \
-                                                 href = \"{href}\">\
-                                                 {title}</a></li>\n",
-                                                reftype = reftype,
-                                                href = file.file,
-                                                title = file.title));
+                    write!(landmarks,
+                           "<li><a epub:type=\"{reftype}\" href = \"{href}\">\
+                            {title}</a></li>\n",
+                           reftype = reftype,
+                           href = file.file,
+                           title = file.title)?;
                 }
             }
         }
