@@ -340,17 +340,17 @@ impl<Z: Zip> EpubBuilder<Z> {
         }
         /// Render content.opf
         let bytes = self.render_opf()?;
-        self.zip.write_file("OEBPS/content.opf", &bytes as &[u8])?;
+        self.zip.write_file("OEBPS/content.opf", &*bytes)?;
         /// Render toc.ncx
         let bytes = self.render_toc()?;
-        self.zip.write_file("OEBPS/toc.ncx", &bytes as &[u8])?;
+        self.zip.write_file("OEBPS/toc.ncx", &*bytes)?;
         // Render nav.xhtml
         let bytes = self.render_nav(true)?;
-        self.zip.write_file("OEBPS/nav.xhtml", &bytes as &[u8])?;
+        self.zip.write_file("OEBPS/nav.xhtml", &*bytes)?;
         // Write inline toc if it needs to
         if self.inline_toc {
             let bytes = self.render_nav(false)?;
-            self.zip.write_file("OEBPS/toc.xhtml", &bytes as &[u8])?;
+            self.zip.write_file("OEBPS/toc.xhtml", &*bytes)?;
         }
 
 
