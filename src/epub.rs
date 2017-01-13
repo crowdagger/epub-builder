@@ -384,7 +384,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 to_id(&content.file)
             };
             let properties = match (self.version, content.cover) {
-                (EpubVersion::V30, true) => "cover-image",
+                (EpubVersion::V30, true) => "properties = \"cover-image\"",
                 _ => "",
             };
             if content.cover {
