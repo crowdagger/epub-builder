@@ -114,7 +114,7 @@ impl Zip for ZipCommand {
         let mut command = Command::new(&self.command);
 
         // First, add mimetype and don't compress it
-        self.add_to_tmp_dir("mimetype", b"application/epub.zip".as_ref())?;
+        self.add_to_tmp_dir("mimetype", b"application/epub+zip".as_ref())?;
         let output = command.current_dir(self.temp_dir.path())
             .arg("-X0")
             .arg("output.epub")
