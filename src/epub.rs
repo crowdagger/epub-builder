@@ -270,14 +270,14 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// ```
     /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent};
     /// let content = "Some content";
-    /// let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
     /// // Add a chapter that won't be added to the Table of Contents
     /// builder.add_content(EpubContent::new("intro.xhtml", content.as_bytes())).unwrap();
     /// ```
     ///
     /// ```
     /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent, TocElement};
-    /// # let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// # let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
     /// # let content = "Some content";
     /// // Sets the title of a chapter so it is added to the Table of contents
     /// // Also add information about its structure
@@ -288,7 +288,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     ///
     /// ```
     /// # use epub_builder::{EpubBuilder, ZipLibrary, EpubContent};
-    /// # let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// # let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
     /// # let content = "Some content";
     /// // Add a section, by setting the level to 2 (instead of the default value 1)
     /// builder.add_content(EpubContent::new("section.xhtml", content.as_bytes())
@@ -326,7 +326,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     ///
     /// ```
     /// # use epub_builder::{EpubBuilder, ZipLibrary};
-    /// let mut builder = EpubBuilder::new(ZipLibrary::new()).unwrap();
+    /// let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
     /// // Write the EPUB file into a Vec<u8>
     /// let mut epub: Vec<u8> = vec!();
     /// builder.generate(&mut epub).unwrap();

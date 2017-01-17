@@ -111,8 +111,6 @@ impl Zip for ZipCommand {
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
-        let mut command = Command::new(&self.command);
-
         // First, add mimetype and don't compress it
         self.add_to_tmp_dir("mimetype", b"application/epub+zip".as_ref())?;
         let output = Command::new(&self.command)
@@ -128,6 +126,7 @@ impl Zip for ZipCommand {
                   output = String::from_utf8_lossy(&output.stderr));
         }
         
+        let mut command = Command::new(&self.command);        
         command.current_dir(self.temp_dir.path())
             .arg("-9")
             .arg("output.epub");
