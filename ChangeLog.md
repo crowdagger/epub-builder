@@ -1,8 +1,8 @@
 ChangeLog
 ==========
 
-unreleased
-------------
+0.2.0 (2017-01-17)
+----------------------
 * Fix the way `mimetype` is stored in the EPUB file (insure it isn't deflated).
   This caused some minor breaking changes:
   * The `Zip` implementations now take care of adding the `mimetype` file, not
