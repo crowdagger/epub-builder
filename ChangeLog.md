@@ -3,13 +3,15 @@ ChangeLog
 
 0.2.0 (2017-01-17)
 ----------------------
-* Fix the way `mimetype` is stored in the EPUB file (insure it isn't deflated).
-  This caused some minor breaking changes:
-  * The `Zip` implementations now take care of adding the `mimetype` file, not
-    `EpubBuilder`.
-  * `ZipLibrary::new()` now returns a `Result<ZipLibrary>`.
-  Normally, replacing `ZipLibrary::new()` with e.g. `ZipLibrary::new()?` should be
-  enough to switch to this new version. 
+Fix the way `mimetype` is stored in the EPUB file (insure it isn't deflated).
+
+This caused some minor breaking changes:
+* The `Zip` implementations now take care of adding the `mimetype` file, not
+  `EpubBuilder`.
+* `ZipLibrary::new()` now returns a `Result<ZipLibrary>`.
+
+Normally, replacing `ZipLibrary::new()` with e.g. `ZipLibrary::new()?` should be
+enough to switch to this new version. 
   
 0.1.2 (2017-01-13)
 ----------------------
