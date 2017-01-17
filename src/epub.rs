@@ -131,8 +131,6 @@ impl<Z: Zip> EpubBuilder<Z> {
             inline_toc: false,
         };
 
-        // Write mimetype upfront
-        epub.zip.write_file("mimetype", b"application/epub+zip".as_ref())?;
         epub.zip.write_file("META-INF/container.xml", templates::CONTAINER)?;
         epub.zip
             .write_file("META-INF/com.apple.ibooks.display-options.xml",

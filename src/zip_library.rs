@@ -8,7 +8,6 @@ use zip::Zip;
 
 use std::io;
 use std::fmt;
-use std::default;
 use std::path::Path;
 use std::io::Read;
 use std::io::Write;
@@ -16,8 +15,16 @@ use std::io::Cursor;
 
 use libzip::ZipWriter;
 use libzip::write::FileOptions;
+use libzip::CompressionMethod;
 
 /// Zip files using the [Rust `zip`](https://crates.io/crates/zip) library.
+///
+/// While this has the advantage of not requiring an external `zip` command, I have
+/// run into some issues when trying to export EPUB generated with this method to
+/// ereaders (e.g. Kobo).
+///
+/// Note that these takes care of adding the mimetype (since it must not be deflated), it
+/// should not be added manually.
 pub struct ZipLibrary {
     writer: ZipWriter<Cursor<Vec<u8>>>,
 }
@@ -28,17 +35,21 @@ impl fmt::Debug for ZipLibrary {
     }
 }
 
-impl default::Default for ZipLibrary {
-    fn default() -> ZipLibrary {
-        ZipLibrary::new() 
-    }
-}
-
-
 impl ZipLibrary {
     /// Creates a new wrapper for zip library
-    pub fn new() -> ZipLibrary {
-        ZipLibrary { writer: ZipWriter::new(Cursor::new(vec![])) }
+    ///
+    /// Also add mimetype at the beginning of the EPUB file.
+    pub fn new() -> Result<ZipLibrary> {
+        let mut writer = ZipWriter::new(Cursor::new(vec![]));
+
+        writer.start_file("mimetype",
+                          FileOptions::default()
+                          .compression_method(CompressionMethod::Stored))
+            .chain_err(|| format!("could not create mimetype in epub"))?;
+        writer.write(b"application/epub.zip")
+            .chain_err(|| format!("could not write mimetype in epub"))?;
+        
+        Ok(ZipLibrary { writer: writer })
     }
 }
 

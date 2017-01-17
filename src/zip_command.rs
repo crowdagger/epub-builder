@@ -25,6 +25,9 @@ use tempdir::TempDir;
 ///
 /// This method will fail if `zip` (or the alternate specified command) is not installed
 /// on the user system.
+///
+/// Note that these takes care of adding the mimetype (since it must not be deflated), it
+/// should not be added manually.
 pub struct ZipCommand {
     command: String,
     temp_dir: TempDir,
@@ -63,18 +66,12 @@ impl ZipCommand {
         self.command = command.into();
         self
     }
-}
 
-
-impl Zip for ZipCommand {
-    fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
-        let path = path.as_ref();
-        if path.starts_with("..") || path.is_absolute() {
-            bail!("file {file} refers to a path outside the temporary directory. This is \
-                   verbotten!");
-        }
-
-        let dest_file = self.temp_dir.path().join(path);
+    /// Adds a file to the temporary directory
+    fn add_to_tmp_dir<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
+        let dest_file = self.temp_dir
+            .path()
+            .join(path.as_ref());
         let dest_dir = dest_file.parent().unwrap();
         if !fs::metadata(dest_dir).is_ok() {
             // dir does not exist, create it
@@ -89,21 +86,50 @@ impl Zip for ZipCommand {
 
         let mut f = File::create(&dest_file).chain_err(|| {
                 format!("could not write to temporary file {file}",
-                        file = path.display())
+                        file = path.as_ref().display())
             })?;
         io::copy(&mut content, &mut f).chain_err(|| {
                 format!("could not write to temporary file {file}",
-                        file = path.display())
+                        file = path.as_ref().display())
             })?;
+        Ok(())
+    }
+}
+
+
+impl Zip for ZipCommand {
+    fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, content: R) -> Result<()> {
+        let path = path.as_ref();
+        if path.starts_with("..") || path.is_absolute() {
+            bail!("file {file} refers to a path outside the temporary directory. This is \
+                   verbotten!");
+        }
+
+        self.add_to_tmp_dir(path, content)?;
         self.files.push(path.to_path_buf());
         Ok(())
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
         let mut command = Command::new(&self.command);
+
+        // First, add mimetype and don't compress it
+        self.add_to_tmp_dir("mimetype", b"application/epub.zip".as_ref())?;
+        let output = command.current_dir(self.temp_dir.path())
+            .arg("-X0")
+            .arg("output.epub")
+            .arg("mimetype")
+            .output()
+            .chain_err(|| format!("failed to run command {name}", name = self.command))?;
+        if !output.status.success() {
+            bail!("command {name} didn't return succesfully: {output}",
+                  name = self.command,
+                  output = String::from_utf8_lossy(&output.stderr));
+        }
+        
         command.current_dir(self.temp_dir.path())
             .arg("-X")
-            .arg("-");
+            .arg("output.epub");
         for file in &self.files {
             command.arg(format!("{}", file.display()));
         }
@@ -111,8 +137,11 @@ impl Zip for ZipCommand {
         let output = command.output()
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if output.status.success() {
-            to.write_all(output.stdout.as_ref())
+            let mut f = File::open(self.temp_dir.path().join("output.epub"))
+                .chain_err(|| "error reading temporary epub file")?;
+            io::copy(&mut f, &mut to)
                 .chain_err(|| "error writing result of the zip command")?;
+            println!("{}", String::from_utf8_lossy(&output.stderr));
             Ok(())
         } else {
             bail!("command {name} didn't return succesfully: {output}",
