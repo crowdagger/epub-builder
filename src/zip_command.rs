@@ -115,7 +115,8 @@ impl Zip for ZipCommand {
 
         // First, add mimetype and don't compress it
         self.add_to_tmp_dir("mimetype", b"application/epub+zip".as_ref())?;
-        let output = command.current_dir(self.temp_dir.path())
+        let output = Command::new(&self.command)
+            .current_dir(self.temp_dir.path())
             .arg("-X0")
             .arg("output.epub")
             .arg("mimetype")
@@ -128,7 +129,7 @@ impl Zip for ZipCommand {
         }
         
         command.current_dir(self.temp_dir.path())
-            .arg("-X")
+            .arg("-9")
             .arg("output.epub");
         for file in &self.files {
             command.arg(format!("{}", file.display()));
@@ -141,7 +142,6 @@ impl Zip for ZipCommand {
                 .chain_err(|| "error reading temporary epub file")?;
             io::copy(&mut f, &mut to)
                 .chain_err(|| "error writing result of the zip command")?;
-            println!("{}", String::from_utf8_lossy(&output.stderr));
             Ok(())
         } else {
             bail!("command {name} didn't return succesfully: {output}",
