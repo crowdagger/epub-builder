@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.2.1 (2017-03-04)
+----------------------
+* Update dependencies (chrono, uuid, error-chain) to latest versions.
+
 0.2.0 (2017-01-17)
 ----------------------
 Fix the way `mimetype` is stored in the EPUB file (insure it isn't deflated).
