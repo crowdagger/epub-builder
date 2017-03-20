@@ -500,12 +500,14 @@ impl<Z: Zip> EpubBuilder<Z> {
                         Acknowledgements => "acknowledgements",
                         Dedication => "dedication",
                     };
-                    write!(landmarks,
-                           "<li><a epub:type=\"{reftype}\" href = \"{href}\">\
-                            {title}</a></li>\n",
-                           reftype = reftype,
-                           href = file.file,
-                           title = file.title)?;
+                    if !file.title.is_empty() {
+                        write!(landmarks,
+                               "<li><a epub:type=\"{reftype}\" href = \"{href}\">\
+                                {title}</a></li>\n",
+                               reftype = reftype,
+                               href = file.file,
+                               title = file.title)?;
+                    }
                 }
             }
         }
