@@ -132,6 +132,9 @@ impl TocElement {
     /// Render element as a list element
     #[doc(hidden)]
     pub fn render(&self, numbered: bool) -> String {
+        if self.title.is_empty() {
+            return String::new();
+        }
         let children = if self.children.is_empty() {
             String::new()
         } else {
