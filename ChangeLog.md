@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.2.2 (2017-03-20)
+----------------------
+* Avoid rendering empty anchors within nav element.
+
 0.2.1 (2017-03-04)
 ----------------------
 * Update dependencies (chrono, uuid, error-chain) to latest versions.
