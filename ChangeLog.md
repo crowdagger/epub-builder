@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.2.3 (2017-06-03)
+---------------------
+* Update uuid dependency to latest version.
+
 0.2.2 (2017-03-20)
 ----------------------
 * Avoid rendering empty anchors within nav element.
