@@ -23,6 +23,6 @@ error-chain = "0.10"
 mustache = "0.8"
 lazy_static = "0.2"
 chrono = "0.3"
-uuid = { version = "0.4", features = ["v4"] }
+uuid = { version = "0.5", features = ["v4"] }
 tempdir = { version = "0.3", optional = true } 
 zip = { version = "0.2", optional = true } 
