@@ -534,7 +534,6 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 }
 
-
 // generate an id compatible string, replacing / and . by _
 fn to_id(s: &str) -> String {
     s.replace(".", "_").replace("/", "_")

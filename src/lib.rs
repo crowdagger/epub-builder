@@ -149,6 +149,7 @@ extern crate uuid;
 extern crate tempdir;
 #[cfg(feature = "zip-library")]
 extern crate zip as libzip;
+extern crate regex;
 
 mod errors;
 mod epub;
@@ -160,6 +161,7 @@ mod epub_content;
 mod zip_command;
 #[cfg(feature = "zip-library")]
 mod zip_library;
+mod common;
 
 pub use errors::*;
 pub use epub::EpubBuilder;
