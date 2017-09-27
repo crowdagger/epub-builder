@@ -369,7 +369,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         if let Some(ref rights) = self.metadata.license {
             write!(optional, "<dc:rights>{}</dc:rights>\n", rights)?;
         }
-        let date = chrono::UTC::now().format("%Y-%m-%dT%H:%M:%SZ");
+        let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
         let uuid = uuid::Uuid::new_v4().urn().to_string();
 
         let mut items = String::new();

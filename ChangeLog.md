@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.2.4 (2017-09-27)
+---------------------
+* Escape quotes in titles when writing content.opf.
+
 0.2.3 (2017-06-03)
 ---------------------
 * Update uuid dependency to latest version.
