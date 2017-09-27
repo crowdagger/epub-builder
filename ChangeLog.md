@@ -5,7 +5,6 @@ ChangeLog
 ---------------------
 * Escape quotes in titles when writing content.opf.
 * Update chrono dependency to 0.4.
-* Update error-chain dependency to 0.11.
 
 0.2.3 (2017-06-03)
 ---------------------
