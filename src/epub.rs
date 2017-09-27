@@ -10,6 +10,7 @@ use toc::Toc;
 use toc::TocElement;
 use epub_content::EpubContent;
 use epub_content::ReferenceType;
+use common;
 
 use std::io;
 use std::io::Read;
@@ -424,7 +425,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 write!(guide,
                        "<reference type = \"{reftype}\" title = \"{title}\" href = \"{href}\" />\n",
                        reftype = reftype,
-                       title = content.title,
+                       title = common::escape_quote(content.title),
                        href = content.file)?;
             }
         }
@@ -533,6 +534,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         Ok(res)
     }
 }
+
 
 // generate an id compatible string, replacing / and . by _
 fn to_id(s: &str) -> String {
