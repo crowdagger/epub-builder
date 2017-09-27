@@ -14,7 +14,7 @@ pub fn escape_quote<'a, S:Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
 
     let s = s.into();
     if REGEX.is_match(&s) {
-        let res = REGEX.replace_all(&s, "\\\"").into_owned();
+        let res = REGEX.replace_all(&s, "&quot;").into_owned();
         Cow::Owned(res)
     } else {
         s
@@ -25,7 +25,7 @@ pub fn escape_quote<'a, S:Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
 #[test]
 fn test_escape() {
     let foo = "Some string with \"quote\"";
-    assert_eq!(&escape_quote(foo), "Some string with \\\"quote\\\"");
+    assert_eq!(&escape_quote(foo), "Some string with &quot;quote&quot;");
 
     let bar= "Some string without quote";
     assert_eq!(&escape_quote(bar), bar);

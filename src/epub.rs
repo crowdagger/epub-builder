@@ -425,7 +425,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 write!(guide,
                        "<reference type = \"{reftype}\" title = \"{title}\" href = \"{href}\" />\n",
                        reftype = reftype,
-                       title = common::escape_quote(content.title),
+                       title = common::escape_quote(content.title.as_str()),
                        href = content.file)?;
             }
         }
