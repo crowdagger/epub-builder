@@ -1,10 +1,13 @@
 ChangeLog
 ==========
 
-0.2.4 (2017-09-27)
+0.3.0 (2017-09-27)
 ---------------------
+* Breaknig change: now requires rustc >= 1.14.0.
 * Escape quotes in titles when writing content.opf.
 * Update chrono dependency to 0.4.
+* Update error-chain dependency to 0.11.0.
+
 
 0.2.3 (2017-06-03)
 ---------------------
