@@ -115,11 +115,11 @@ impl TocElement {
         };
         (offset,
          format!("
-<navPoint id = \"navPoint-{id}\">
+<navPoint id=\"navPoint-{id}\">
   <navLabel>
    <text>{title}</text>
   </navLabel>
-  <content src = \"{url}\" />
+  <content src=\"{url}\" />
 {children}
 </navPoint>",
                  id = id,
@@ -146,7 +146,7 @@ impl TocElement {
                     oul = if numbered { "ol" } else { "ul" },
                     children = output)
         };
-        format!("<li><a href = \"{link}\">{title}</a>{children}</li>\n",
+        format!("<li><a href=\"{link}\">{title}</a>{children}</li>\n",
                 link = self.url,
                 title = self.title,
                 children = children)
@@ -272,14 +272,14 @@ fn toc_simple() {
     toc.add(TocElement::new("#5", "2"));
     let actual = toc.render(false);
     let expected = "<ul>
-<li><a href = \"#1\">0.0.1</a></li>
-<li><a href = \"#2\">1</a>
-<ul><li><a href = \"#3\">1.0.1</a></li>
-<li><a href = \"#4\">1.1</a></li>
+<li><a href=\"#1\">0.0.1</a></li>
+<li><a href=\"#2\">1</a>
+<ul><li><a href=\"#3\">1.0.1</a></li>
+<li><a href=\"#4\">1.1</a></li>
 
 </ul>
 </li>
-<li><a href = \"#5\">2</a></li>
+<li><a href=\"#5\">2</a></li>
 
 </ul>
 ";
@@ -293,18 +293,18 @@ fn toc_epub_simple() {
     toc.add(TocElement::new("#2", "2"));
     let actual = toc.render_epub();
     let expected = "
-<navPoint id = \"navPoint-1\">
+<navPoint id=\"navPoint-1\">
   <navLabel>
    <text>1</text>
   </navLabel>
-  <content src = \"#1\" />
+  <content src=\"#1\" />
 
 </navPoint>
-<navPoint id = \"navPoint-2\">
+<navPoint id=\"navPoint-2\">
   <navLabel>
    <text>2</text>
   </navLabel>
-  <content src = \"#2\" />
+  <content src=\"#2\" />
 
 </navPoint>";
     assert_eq!(&actual, expected);
@@ -319,31 +319,31 @@ fn toc_epub_simple_sublevels() {
     toc.add(TocElement::new("#2.1", "2.1").level(2));
     let actual = toc.render_epub();
     let expected = "
-<navPoint id = \"navPoint-1\">
+<navPoint id=\"navPoint-1\">
   <navLabel>
    <text>1</text>
   </navLabel>
-  <content src = \"#1\" />
+  <content src=\"#1\" />
 
-<navPoint id = \"navPoint-2\">
+<navPoint id=\"navPoint-2\">
   <navLabel>
    <text>1.1</text>
   </navLabel>
-  <content src = \"#1.1\" />
+  <content src=\"#1.1\" />
 
 </navPoint>
 </navPoint>
-<navPoint id = \"navPoint-3\">
+<navPoint id=\"navPoint-3\">
   <navLabel>
    <text>2</text>
   </navLabel>
-  <content src = \"#2\" />
+  <content src=\"#2\" />
 
-<navPoint id = \"navPoint-4\">
+<navPoint id=\"navPoint-4\">
   <navLabel>
    <text>2.1</text>
   </navLabel>
-  <content src = \"#2.1\" />
+  <content src=\"#2.1\" />
 
 </navPoint>
 </navPoint>";
@@ -359,23 +359,23 @@ fn toc_epub_broken_sublevels() {
     toc.add(TocElement::new("#2.1", "2.1").level(2));
     let actual = toc.render_epub();
     let expected = "
-<navPoint id = \"navPoint-1\">
+<navPoint id=\"navPoint-1\">
   <navLabel>
    <text>1.1</text>
   </navLabel>
-  <content src = \"#1.1\" />
+  <content src=\"#1.1\" />
 
-</navPoint>\n<navPoint id = \"navPoint-2\">
+</navPoint>\n<navPoint id=\"navPoint-2\">
   <navLabel>
    <text>2</text>
   </navLabel>
-  <content src = \"#2\" />
+  <content src=\"#2\" />
 
-<navPoint id = \"navPoint-3\">
+<navPoint id=\"navPoint-3\">
   <navLabel>
    <text>2.1</text>
   </navLabel>
-  <content src = \"#2.1\" />
+  <content src=\"#2.1\" />
 
 </navPoint>\n</navPoint>";
     assert_eq!(&actual, expected);

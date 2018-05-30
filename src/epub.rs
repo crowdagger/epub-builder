@@ -383,23 +383,23 @@ impl<Z: Zip> EpubBuilder<Z> {
                 to_id(&content.file)
             };
             let properties = match (self.version, content.cover) {
-                (EpubVersion::V30, true) => "properties = \"cover-image\"",
+                (EpubVersion::V30, true) => "properties=\"cover-image\"",
                 _ => "",
             };
             if content.cover {
                 write!(optional,
-                       "<meta name = \"cover\" content = \"{}\" />\n",
+                       "<meta name=\"cover\" content=\"{}\" />\n",
                        content.file)?;
             }
             write!(items,
-                   "<item media-type = \"{mime}\" {properties} \
-                    id = \"{id}\" href = \"{href}\" />\n",
+                   "<item media-type=\"{mime}\" {properties} \
+                    id=\"{id}\" href=\"{href}\" />\n",
                    properties = properties,
                    mime = content.mime,
                    id = id,
                    href = content.file)?;
             if content.itemref {
-                write!(itemrefs, "<itemref idref = \"{id}\" />\n", id = id)?;
+                write!(itemrefs, "<itemref idref=\"{id}\" />\n", id = id)?;
             }
             if let Some(reftype) = content.reftype {
                 use epub_content::ReferenceType::*;
@@ -423,7 +423,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Text => "text",
                 };
                 write!(guide,
-                       "<reference type = \"{reftype}\" title = \"{title}\" href = \"{href}\" />\n",
+                       "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\" />\n",
                        reftype = reftype,
                        title = common::escape_quote(content.title.as_str()),
                        href = content.file)?;
@@ -503,7 +503,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     };
                     if !file.title.is_empty() {
                         write!(landmarks,
-                               "<li><a epub:type=\"{reftype}\" href = \"{href}\">\
+                               "<li><a epub:type=\"{reftype}\" href=\"{href}\">\
                                 {title}</a></li>\n",
                                reftype = reftype,
                                href = file.file,
