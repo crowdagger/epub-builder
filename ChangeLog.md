@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+0.4.0 (2018-06-01)
+==================
+* Fix XML format (thanks to @baskerville)
+* Now requires rustc >= 1.20.0
+
 0.3.0 (2017-09-27)
 ---------------------
 * Breaknig change: now requires rustc >= 1.14.0.
