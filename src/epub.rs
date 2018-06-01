@@ -431,15 +431,15 @@ impl<Z: Zip> EpubBuilder<Z> {
         }
 
         let data = MapBuilder::new()
-            .insert_str("lang", &self.metadata.lang)
-            .insert_str("author", &self.metadata.author)
-            .insert_str("title", &self.metadata.title)
-            .insert_str("generator", &self.metadata.generator)
-            .insert_str("toc_name", &self.metadata.toc_name)
+            .insert_str("lang", self.metadata.lang.as_str())
+            .insert_str("author", self.metadata.author.as_str())
+            .insert_str("title", self.metadata.title.as_str())
+            .insert_str("generator", self.metadata.generator.as_str())
+            .insert_str("toc_name", self.metadata.toc_name.as_str())
             .insert_str("optional", optional)
             .insert_str("items", items)
             .insert_str("itemrefs", itemrefs)
-            .insert_str("date", date)
+            .insert_str("date", date.to_string())
             .insert_str("uuid", uuid)
             .insert_str("guide", guide)
             .build();
@@ -464,8 +464,8 @@ impl<Z: Zip> EpubBuilder<Z> {
         nav_points.push_str(&self.toc.render_epub());
 
         let data = MapBuilder::new()
-            .insert_str("toc_name", &self.metadata.toc_name)
-            .insert_str("nav_points", nav_points)
+            .insert_str("toc_name", self.metadata.toc_name.as_str())
+            .insert_str("nav_points", nav_points.as_str())
             .build();
         let mut res: Vec<u8> = vec![];
         templates::TOC_NCX.render_data(&mut res, &data)
@@ -518,8 +518,8 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let data = MapBuilder::new()
             .insert_str("content", content)
-            .insert_str("toc_name", &self.metadata.toc_name)
-            .insert_str("generator", &self.metadata.generator)
+            .insert_str("toc_name", self.metadata.toc_name.as_str())
+            .insert_str("generator", self.metadata.generator.as_str())
             .insert_str("landmarks", landmarks)
             .build();
 
