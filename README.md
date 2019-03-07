@@ -1,7 +1,5 @@
 [See the full library documentation on Docs.rs.](https://docs.rs/epub-builder)
 
-# epub-builder
-
 A library to generate EPUB files.
 
 The purpose for this library is to make it easier to generate EPUB files:
@@ -14,7 +12,7 @@ Add this in your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-epub-builder = "0.1"
+epub-builder = "0.4"
 ```
 
 ## Example
