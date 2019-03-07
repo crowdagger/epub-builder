@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.1 (2019-03-07)
+========================
+* Replace '\' by '/' in zip files path under Windows
+
 0.4.0 (2018-06-01)
 ==================
 * Fix XML format (thanks to @baskerville)
@@ -9,7 +13,7 @@ ChangeLog
 
 0.3.0 (2017-09-27)
 ---------------------
-* Breaknig change: now requires rustc >= 1.14.0.
+* Breaking change: now requires rustc >= 1.14.0.
 * Escape quotes in titles when writing content.opf.
 * Update chrono dependency to 0.4.
 * Update error-chain dependency to 0.11.0.
