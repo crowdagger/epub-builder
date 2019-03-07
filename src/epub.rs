@@ -337,10 +337,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         if !self.stylesheet {
             self.stylesheet(b"".as_ref())?;
         }
-        /// Render content.opf
+        // Render content.opf
         let bytes = self.render_opf()?;
         self.zip.write_file("OEBPS/content.opf", &*bytes)?;
-        /// Render toc.ncx
+        // Render toc.ncx
         let bytes = self.render_toc()?;
         self.zip.write_file("OEBPS/toc.ncx", &*bytes)?;
         // Render nav.xhtml
@@ -370,7 +370,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             write!(optional, "<dc:rights>{}</dc:rights>\n", rights)?;
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-        let uuid = uuid::Uuid::new_v4().urn().to_string();
+        let uuid = uuid::adapter::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
         let mut items = String::new();
         let mut itemrefs = String::new();
