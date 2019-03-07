@@ -56,7 +56,11 @@ impl ZipLibrary {
 
 impl Zip for ZipLibrary {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
-        let file = format!("{}", path.as_ref().display());
+        let mut file = format!("{}", path.as_ref().display());
+        if cfg!(target_os = "windows") {
+            // Path names should not use backspaces in zip files
+            file = file.replace('\\', "/");
+        }
         let options = FileOptions::default();
         self.writer
             .start_file(file.clone(), options)
