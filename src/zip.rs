@@ -19,3 +19,4 @@ pub trait Zip {
     /// Generate the ZIP file
     fn generate<W: Write>(&mut self, W) -> Result<()>;
 }
+

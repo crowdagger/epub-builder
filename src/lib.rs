@@ -161,6 +161,9 @@ mod epub_content;
 mod zip_command;
 #[cfg(feature = "zip-library")]
 mod zip_library;
+#[cfg(feature = "zip-command")]
+#[cfg(feature = "zip-library")]
+mod zip_command_or_library;
 mod common;
 
 pub use errors::*;
@@ -175,3 +178,6 @@ pub use epub_content::ReferenceType;
 pub use zip_command::ZipCommand;
 #[cfg(feature = "zip-library")]
 pub use zip_library::ZipLibrary;
+#[cfg(feature = "zip-command")]
+#[cfg(feature = "zip-library")]
+pub use zip_command_or_library::ZipCommandOrLibrary;
