@@ -3,7 +3,6 @@
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use errors::Result;
-use errors::ResultExt;
 use zip::Zip;
 use zip_library::ZipLibrary;
 use zip_command::ZipCommand;
