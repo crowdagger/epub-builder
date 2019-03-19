@@ -67,6 +67,21 @@ impl ZipCommand {
         self
     }
 
+    /// Test that zip command works correctly (i.e program is installed)
+    pub fn test(&self) -> Result<()> {
+        let output = Command::new(&self.command)
+            .current_dir(self.temp_dir.path())
+            .arg("-v")
+            .output()
+            .chain_err(|| format!("failed to run command {name}", name = self.command))?;
+        if !output.status.success() {
+            bail!("command {name} didn't return succesfully: {output}",
+                  name = self.command,
+                  output = String::from_utf8_lossy(&output.stderr));
+        }
+        Ok(())
+    }
+
     /// Adds a file to the temporary directory
     fn add_to_tmp_dir<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
         let dest_file = self.temp_dir
@@ -148,4 +163,24 @@ impl Zip for ZipCommand {
                   output = String::from_utf8_lossy(&output.stderr));
         }
     }
+}
+
+#[test]
+fn zip_creation() {
+    ZipCommand::new().unwrap();
+}
+
+#[test]
+fn zip_ok() {
+    let command = ZipCommand::new().unwrap();
+    let res = command.test();
+    assert!(res.is_ok());
+}
+
+#[test]
+fn zip_not_ok() {
+    let mut command = ZipCommand::new().unwrap();
+    command.command("xkcodpd");
+    let res = command.test();
+    assert!(res.is_err());
 }
