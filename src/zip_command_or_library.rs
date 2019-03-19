@@ -42,7 +42,7 @@ impl Zip for ZipCommandOrLibrary {
 impl ZipCommandOrLibrary {
     /// Try to create a ZipCommand using `command`. If running `command` fails on the system,
     /// fall back to `ZipLibrary`.
-    fn new(command: &str) -> Result<ZipCommandOrLibrary> {
+    pub fn new(command: &str) -> Result<ZipCommandOrLibrary> {
         ZipCommand::new()
             .map(|mut z| {
             z.command(command);
