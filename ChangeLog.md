@@ -1,8 +1,8 @@
 ChangeLog
 ==========
 	
-unreleased
-=============
+0.4.2 (2019-03-19)
+========================
 * Add `test` method to `ZipCommand` to test whether this zip command is installed
   on the system
 
