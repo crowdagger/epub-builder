@@ -204,7 +204,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// at the beginning, if you call it after, it will be at the end.
     pub fn inline_toc(&mut self) -> &mut Self {
         self.inline_toc = true;
-        self.toc.add(TocElement::new("toc.xhtml", self.metadata.toc_name.as_ref()));
+        self.toc.add(TocElement::new("toc.xhtml", self.metadata.toc_name.as_str()));
         let mut file = Content::new("toc.xhtml", "application/xhtml+xml");
         file.reftype = Some(ReferenceType::Toc);
         file.title = self.metadata.toc_name.clone();
@@ -308,7 +308,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         self.zip
             .write_file(Path::new("OEBPS").join(content.toc.url.as_str()),
                         content.content)?;
-        let mut file = Content::new(content.toc.url.as_ref(), "application/xhtml+xml");
+        let mut file = Content::new(content.toc.url.as_str(), "application/xhtml+xml");
         file.itemref = true;
         file.reftype = content.reftype;
         if file.reftype.is_some() {
