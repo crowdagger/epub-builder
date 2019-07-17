@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.4 (2019-07-17)
+======================
+* Type deduction fixes for new Rust compiler
+	
 0.4.3 (2019-03-19)
 ========================
 * Add the `ZipCommandOrLibrary` wrapper.
