@@ -47,7 +47,7 @@ impl TocElement {
     /// Change level, recursively, so the structure keeps having some sense
     fn level_up(&mut self, level: i32) {
         self.level = level;
-        for mut child in &mut self.children {
+        for child in &mut self.children {
             if child.level <= self.level {
                 child.level_up(level + 1);
             }
