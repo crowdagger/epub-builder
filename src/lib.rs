@@ -151,6 +151,7 @@ extern crate tempdir;
 extern crate zip as libzip;
 extern crate regex;
 extern crate html2text;
+#[cfg(test)] #[macro_use] extern crate pretty_assertions;
 
 mod errors;
 mod epub;

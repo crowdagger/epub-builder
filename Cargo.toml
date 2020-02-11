@@ -28,3 +28,6 @@ tempdir = { version = "0.3", optional = true }
 zip = { version = "0.5", optional = true } 
 regex = "1"
 html2text = "0.1"
+
+[dev-dependencies]
+pretty_assertions = "0.6"
