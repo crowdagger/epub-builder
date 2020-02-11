@@ -1,6 +1,6 @@
 [package]
 name = "epub-builder"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Elisabeth Henry <liz.henry@ouvaton.org>"]
 description = "A Rust library for generating EPUB files"
 readme = "README.md"
@@ -23,7 +23,7 @@ error-chain = "0.12"
 mustache = "0.9"
 lazy_static = "1"
 chrono = "0.4"
-uuid = { version = "0.8", features = ["v4"] }
+uuid = { version = "0.8 ", features = ["v4"] }
 tempdir = { version = "0.3", optional = true } 
 zip = { version = "0.5", optional = true } 
 regex = "1"

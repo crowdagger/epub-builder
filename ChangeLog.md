@@ -1,7 +1,7 @@
 ChangeLog
 ==========
 
-unreleased
+0.4.5 (2020-02-11)
 =============
 * Sanitize HTML before writing toc.ncx titles.
 * Use ID instead of file name in cover metadata (see issue #6)
