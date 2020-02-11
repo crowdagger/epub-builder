@@ -113,6 +113,8 @@ impl TocElement {
             }
             output
         };
+        // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
+        let escaped_title = ammonia::clean_text(&self.title);
         (offset,
          format!("
 <navPoint id=\"navPoint-{id}\">
@@ -123,7 +125,7 @@ impl TocElement {
 {children}
 </navPoint>",
                  id = id,
-                 title = self.title,
+                 title = escaped_title,
                  url = self.url,
                  children = children))
 

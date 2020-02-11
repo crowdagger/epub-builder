@@ -27,3 +27,4 @@ uuid = { version = "0.7", features = ["v4"] }
 tempdir = { version = "0.3", optional = true } 
 zip = { version = "0.5", optional = true } 
 regex = "1"
+ammonia = "3"

@@ -150,6 +150,7 @@ extern crate tempdir;
 #[cfg(feature = "zip-library")]
 extern crate zip as libzip;
 extern crate regex;
+extern crate ammonia;
 
 mod errors;
 mod epub;
