@@ -125,7 +125,7 @@ impl TocElement {
 {children}
 </navPoint>",
                  id = id,
-                 title = escaped_title,
+                 title = escaped_title.trim(),
                  url = self.url,
                  children = children))
 

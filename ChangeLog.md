@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+unreleased
+=============
+* Sanitize HTML before writing toc.ncx titles.
+* Use ID instead of file name in cover metadata (see issue #6)
+
 0.4.4 (2019-07-17)
 ======================
 * Type deduction fixes for new Rust compiler
