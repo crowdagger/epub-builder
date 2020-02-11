@@ -114,7 +114,7 @@ impl TocElement {
             output
         };
         // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
-        let escaped_title = ammonia::clean_text(&self.title);
+        let escaped_title = html2text::from_read(self.title.as_bytes(), 200);
         (offset,
          format!("
 <navPoint id=\"navPoint-{id}\">
