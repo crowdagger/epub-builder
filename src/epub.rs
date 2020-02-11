@@ -216,7 +216,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Add a resource to the EPUB file
     ///
-    /// This resource be a picture, a font, some CSS file, .... Unlike
+    /// This resource can be a picture, a font, some CSS file, .... Unlike
     /// `add_content`, files added this way won't appear in the linear
     /// document.
     ///
@@ -388,8 +388,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             };
             if content.cover {
                 write!(optional,
-                       "<meta name=\"cover\" content=\"{}\" />\n",
-                       content.file)?;
+                       "<meta name=\"cover\" content=\"cover-image\" />\n")?;
             }
             write!(items,
                    "<item media-type=\"{mime}\" {properties} \
