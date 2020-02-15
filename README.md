@@ -38,7 +38,7 @@ fn run() -> Result<()> {
     let dummy_css = "body { background-color: pink }";
 
     // Create a new EpubBuilder using the zip library
-    EpubBuilder::new(ZipLibrary::new())?
+    EpubBuilder::new(ZipLibrary::new()?)?
     // Set some metadata
         .metadata("author", "Joan Doe")?
         .metadata("title", "Dummy Book")?
