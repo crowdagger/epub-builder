@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.6 (2020-06-12)
+=====================
+* The example bin should now produce a valid EPUB. 
+
 0.4.5 (2020-02-11)
 =============
 * Sanitize HTML before writing toc.ncx titles.
