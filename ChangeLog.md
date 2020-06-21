@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.7 (2020-06-21)
+=====================
+* Fix issue reading zip files on some readers
+
 0.4.6 (2020-06-12)
 =====================
 * The example bin should now produce a valid EPUB. 

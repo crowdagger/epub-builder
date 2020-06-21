@@ -41,6 +41,7 @@ impl ZipLibrary {
     /// Also add mimetype at the beginning of the EPUB file.
     pub fn new() -> Result<ZipLibrary> {
         let mut writer = ZipWriter::new(Cursor::new(vec![]));
+        writer.set_comment(""); // Fix issues with some readers
 
         writer.start_file("mimetype",
                           FileOptions::default()
