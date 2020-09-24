@@ -4,12 +4,12 @@
 
 use errors::Result;
 use zip::Zip;
-use zip_library::ZipLibrary;
 use zip_command::ZipCommand;
+use zip_library::ZipLibrary;
 
-use std::path::Path;
 use std::io::Read;
 use std::io::Write;
+use std::path::Path;
 
 /// Wrapper around either a ZipCommand or a ZipLibrary
 ///
@@ -18,15 +18,14 @@ pub enum ZipCommandOrLibrary {
     /// Command variant
     Command(ZipCommand),
     /// Library variant
-    Library(ZipLibrary)
+    Library(ZipLibrary),
 }
-
 
 impl Zip for ZipCommandOrLibrary {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, content: R) -> Result<()> {
         match self {
             ZipCommandOrLibrary::Command(ref mut command) => command.write_file(path, content),
-            ZipCommandOrLibrary::Library(ref mut library) => library.write_file(path, content)
+            ZipCommandOrLibrary::Library(ref mut library) => library.write_file(path, content),
         }
     }
 
@@ -37,18 +36,18 @@ impl Zip for ZipCommandOrLibrary {
         }
     }
 }
-                
+
 impl ZipCommandOrLibrary {
     /// Try to create a ZipCommand using `command`. If running `command` fails on the system,
     /// fall back to `ZipLibrary`.
     pub fn new(command: &str) -> Result<ZipCommandOrLibrary> {
         ZipCommand::new()
             .map(|mut z| {
-            z.command(command);
-            z})
+                z.command(command);
+                z
+            })
             .and_then(|z| z.test().map(|_| z))
             .map(|z| ZipCommandOrLibrary::Command(z))
-            .or_else(|_| ZipLibrary::new()
-                     .map(|l| ZipCommandOrLibrary::Library(l)))
+            .or_else(|_| ZipLibrary::new().map(|l| ZipCommandOrLibrary::Library(l)))
     }
 }

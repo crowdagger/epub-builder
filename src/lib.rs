@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 //! A library to generate EPUB files.
 //!
 //! The purpose for this library is to make it easier to generate EPUB files:
@@ -142,44 +141,46 @@
 extern crate lazy_static;
 #[macro_use]
 extern crate error_chain;
-extern crate mustache;
 extern crate chrono;
-extern crate uuid;
+extern crate html_escape;
+extern crate mustache;
+extern crate regex;
 #[cfg(feature = "zip-command")]
 extern crate tempdir;
+extern crate uuid;
 #[cfg(feature = "zip-library")]
 extern crate zip as libzip;
-extern crate regex;
-extern crate html2text;
-#[cfg(test)] #[macro_use] extern crate pretty_assertions;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
 
-mod errors;
+mod common;
 mod epub;
-mod zip;
+mod epub_content;
+mod errors;
 mod templates;
 mod toc;
-mod epub_content;
+mod zip;
 #[cfg(feature = "zip-command")]
 mod zip_command;
-#[cfg(feature = "zip-library")]
-mod zip_library;
 #[cfg(feature = "zip-command")]
 #[cfg(feature = "zip-library")]
 mod zip_command_or_library;
-mod common;
+#[cfg(feature = "zip-library")]
+mod zip_library;
 
-pub use errors::*;
 pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
-pub use zip::Zip;
-pub use toc::Toc;
-pub use toc::TocElement;
 pub use epub_content::EpubContent;
 pub use epub_content::ReferenceType;
+pub use errors::*;
+pub use toc::Toc;
+pub use toc::TocElement;
+pub use zip::Zip;
 #[cfg(feature = "zip-command")]
 pub use zip_command::ZipCommand;
-#[cfg(feature = "zip-library")]
-pub use zip_library::ZipLibrary;
 #[cfg(feature = "zip-command")]
 #[cfg(feature = "zip-library")]
 pub use zip_command_or_library::ZipCommandOrLibrary;
+#[cfg(feature = "zip-library")]
+pub use zip_library::ZipLibrary;

@@ -7,9 +7,9 @@ use regex::Regex;
 use std::borrow::Cow;
 
 /// Escape quotes from the string
-pub fn escape_quote<'a, S:Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
+pub fn escape_quote<'a, S: Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
     lazy_static! {
-        static ref REGEX:Regex = Regex::new(r#"""#).unwrap();
+        static ref REGEX: Regex = Regex::new(r#"""#).unwrap();
     }
 
     let s = s.into();
@@ -21,12 +21,11 @@ pub fn escape_quote<'a, S:Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
     }
 }
 
-
 #[test]
 fn test_escape() {
     let foo = "Some string with \"quote\"";
     assert_eq!(&escape_quote(foo), "Some string with &quot;quote&quot;");
 
-    let bar= "Some string without quote";
+    let bar = "Some string without quote";
     assert_eq!(&escape_quote(bar), bar);
 }

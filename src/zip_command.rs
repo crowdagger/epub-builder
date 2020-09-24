@@ -2,18 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use zip::Zip;
 use errors::Result;
 use errors::ResultExt;
+use zip::Zip;
 
-use std::io;
-use std::path::Path;
-use std::path::PathBuf;
-use std::io::Read;
-use std::io::Write;
 use std::fs;
 use std::fs::DirBuilder;
 use std::fs::File;
+use std::io;
+use std::io::Read;
+use std::io::Write;
+use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
 use tempdir::TempDir;
@@ -75,49 +75,56 @@ impl ZipCommand {
             .output()
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if !output.status.success() {
-            bail!("command {name} didn't return succesfully: {output}",
-                  name = self.command,
-                  output = String::from_utf8_lossy(&output.stderr));
+            bail!(
+                "command {name} didn't return succesfully: {output}",
+                name = self.command,
+                output = String::from_utf8_lossy(&output.stderr)
+            );
         }
         Ok(())
     }
 
     /// Adds a file to the temporary directory
     fn add_to_tmp_dir<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
-        let dest_file = self.temp_dir
-            .path()
-            .join(path.as_ref());
+        let dest_file = self.temp_dir.path().join(path.as_ref());
         let dest_dir = dest_file.parent().unwrap();
         if !fs::metadata(dest_dir).is_ok() {
             // dir does not exist, create it
-            DirBuilder::new().recursive(true)
+            DirBuilder::new()
+                .recursive(true)
                 .create(&dest_dir)
                 .chain_err(|| {
-                    format!("could not create temporary directory in {path}",
-                            path = dest_dir.display())
+                    format!(
+                        "could not create temporary directory in {path}",
+                        path = dest_dir.display()
+                    )
                 })?;
         }
 
-
         let mut f = File::create(&dest_file).chain_err(|| {
-                format!("could not write to temporary file {file}",
-                        file = path.as_ref().display())
-            })?;
+            format!(
+                "could not write to temporary file {file}",
+                file = path.as_ref().display()
+            )
+        })?;
         io::copy(&mut content, &mut f).chain_err(|| {
-                format!("could not write to temporary file {file}",
-                        file = path.as_ref().display())
-            })?;
+            format!(
+                "could not write to temporary file {file}",
+                file = path.as_ref().display()
+            )
+        })?;
         Ok(())
     }
 }
-
 
 impl Zip for ZipCommand {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, content: R) -> Result<()> {
         let path = path.as_ref();
         if path.starts_with("..") || path.is_absolute() {
-            bail!("file {file} refers to a path outside the temporary directory. This is \
-                   verbotten!");
+            bail!(
+                "file {file} refers to a path outside the temporary directory. This is \
+                   verbotten!"
+            );
         }
 
         self.add_to_tmp_dir(path, content)?;
@@ -136,31 +143,36 @@ impl Zip for ZipCommand {
             .output()
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if !output.status.success() {
-            bail!("command {name} didn't return succesfully: {output}",
-                  name = self.command,
-                  output = String::from_utf8_lossy(&output.stderr));
+            bail!(
+                "command {name} didn't return succesfully: {output}",
+                name = self.command,
+                output = String::from_utf8_lossy(&output.stderr)
+            );
         }
-        
-        let mut command = Command::new(&self.command);        
-        command.current_dir(self.temp_dir.path())
+
+        let mut command = Command::new(&self.command);
+        command
+            .current_dir(self.temp_dir.path())
             .arg("-9")
             .arg("output.epub");
         for file in &self.files {
             command.arg(format!("{}", file.display()));
         }
 
-        let output = command.output()
+        let output = command
+            .output()
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if output.status.success() {
             let mut f = File::open(self.temp_dir.path().join("output.epub"))
                 .chain_err(|| "error reading temporary epub file")?;
-            io::copy(&mut f, &mut to)
-                .chain_err(|| "error writing result of the zip command")?;
+            io::copy(&mut f, &mut to).chain_err(|| "error writing result of the zip command")?;
             Ok(())
         } else {
-            bail!("command {name} didn't return succesfully: {output}",
-                  name = self.command,
-                  output = String::from_utf8_lossy(&output.stderr));
+            bail!(
+                "command {name} didn't return succesfully: {output}",
+                name = self.command,
+                output = String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 }

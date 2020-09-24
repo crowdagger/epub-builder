@@ -24,7 +24,6 @@ pub struct TocElement {
     pub children: Vec<TocElement>,
 }
 
-
 impl TocElement {
     /// Creates a new element of the toc
     ///
@@ -114,9 +113,11 @@ impl TocElement {
             output
         };
         // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
-        let escaped_title = html2text::from_read(self.title.as_bytes(), 200);
-        (offset,
-         format!("
+        let escaped_title = html_escape::encode_text(&self.title);
+        (
+            offset,
+            format!(
+                "
 <navPoint id=\"navPoint-{id}\">
   <navLabel>
    <text>{title}</text>
@@ -124,11 +125,12 @@ impl TocElement {
   <content src=\"{url}\" />
 {children}
 </navPoint>",
-                 id = id,
-                 title = escaped_title.trim(),
-                 url = self.url,
-                 children = children))
-
+                id = id,
+                title = escaped_title.trim(),
+                url = self.url,
+                children = children
+            ),
+        )
     }
 
     /// Render element as a list element
@@ -144,18 +146,20 @@ impl TocElement {
             for child in &self.children {
                 output.push_str(&child.render(numbered));
             }
-            format!("\n<{oul}>{children}\n</{oul}>\n",
-                    oul = if numbered { "ol" } else { "ul" },
-                    children = output)
+            format!(
+                "\n<{oul}>{children}\n</{oul}>\n",
+                oul = if numbered { "ol" } else { "ul" },
+                children = output
+            )
         };
-        format!("<li><a href=\"{link}\">{title}</a>{children}</li>\n",
-                link = self.url,
-                title = self.title,
-                children = children)
-
+        format!(
+            "<li><a href=\"{link}\">{title}</a>{children}</li>\n",
+            link = self.url,
+            title = self.title,
+            children = children
+        )
     }
 }
-
 
 /// A Table Of Contents
 ///
@@ -254,9 +258,11 @@ impl Toc {
         for elem in &self.elements {
             output.push_str(&elem.render(numbered));
         }
-        format!("<{oul}>\n{output}\n</{oul}>\n",
-                output = output,
-                oul = if numbered { "ol" } else { "ul" })
+        format!(
+            "<{oul}>\n{output}\n</{oul}>\n",
+            output = output,
+            oul = if numbered { "ol" } else { "ul" }
+        )
     }
 }
 
@@ -352,7 +358,6 @@ fn toc_epub_simple_sublevels() {
     assert_eq!(&actual, expected);
 }
 
-
 #[test]
 fn toc_epub_broken_sublevels() {
     let mut toc = Toc::new();
@@ -380,5 +385,20 @@ fn toc_epub_broken_sublevels() {
   <content src=\"#2.1\" />
 
 </navPoint>\n</navPoint>";
+    assert_eq!(&actual, expected);
+}
+
+#[test]
+fn toc_epub_title_escaped() {
+    let mut toc = Toc::new();
+    toc.add(TocElement::new("#1", "D&D"));
+    let actual = toc.render_epub();
+    let expected = "
+<navPoint id=\"navPoint-1\">
+  <navLabel>
+   <text>D&amp;D</text>
+  </navLabel>
+  <content src=\"#1\" />
+\n</navPoint>";
     assert_eq!(&actual, expected);
 }

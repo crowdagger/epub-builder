@@ -6,16 +6,16 @@ use errors::Result;
 use errors::ResultExt;
 use zip::Zip;
 
-use std::io;
 use std::fmt;
-use std::path::Path;
+use std::io;
+use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
-use std::io::Cursor;
+use std::path::Path;
 
-use libzip::ZipWriter;
 use libzip::write::FileOptions;
 use libzip::CompressionMethod;
+use libzip::ZipWriter;
 
 /// Zip files using the [Rust `zip`](https://crates.io/crates/zip) library.
 ///
@@ -43,17 +43,19 @@ impl ZipLibrary {
         let mut writer = ZipWriter::new(Cursor::new(vec![]));
         writer.set_comment(""); // Fix issues with some readers
 
-        writer.start_file("mimetype",
-                          FileOptions::default()
-                          .compression_method(CompressionMethod::Stored))
+        writer
+            .start_file(
+                "mimetype",
+                FileOptions::default().compression_method(CompressionMethod::Stored),
+            )
             .chain_err(|| format!("could not create mimetype in epub"))?;
-        writer.write(b"application/epub+zip")
+        writer
+            .write(b"application/epub+zip")
             .chain_err(|| format!("could not write mimetype in epub"))?;
-        
+
         Ok(ZipLibrary { writer: writer })
     }
 }
-
 
 impl Zip for ZipLibrary {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
@@ -67,13 +69,13 @@ impl Zip for ZipLibrary {
             .start_file(file.clone(), options)
             .chain_err(|| format!("could not create file '{}' in epub", file))?;
         io::copy(&mut content, &mut self.writer)
-            .chain_err(|| format!("could not write file '{}' in epub",
-                                  file))?;
+            .chain_err(|| format!("could not write file '{}' in epub", file))?;
         Ok(())
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
-        let cursor = self.writer
+        let cursor = self
+            .writer
             .finish()
             .chain_err(|| "error writing zip file")?;
         let bytes = cursor.into_inner();
