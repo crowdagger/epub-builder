@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.8 (2020-09-29)
+=====================
+* Fix TOC when chapter titles contain HTML (see issue #13)
+
 0.4.7 (2020-06-21)
 =====================
 * Fix issue reading zip files on some readers

@@ -1,6 +1,6 @@
 [package]
 name = "epub-builder"
-version = "0.4.7"
+version = "0.4.8"
 authors = ["Elisabeth Henry <liz.henry@ouvaton.org>"]
 description = "A Rust library for generating EPUB files"
 readme = "README.md"
