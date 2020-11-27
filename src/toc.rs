@@ -155,7 +155,8 @@ impl TocElement {
         format!(
             "<li><a href=\"{link}\">{title}</a>{children}</li>\n",
             link = self.url,
-            title = self.title,
+            // escape < > symbols by &lt; &gt; using 'encode_text()' in link's Title
+            title = html_escape::encode_text(&self.title),
             children = children
         )
     }
@@ -256,7 +257,9 @@ impl Toc {
     pub fn render(&mut self, numbered: bool) -> String {
         let mut output = String::new();
         for elem in &self.elements {
-            output.push_str(&elem.render(numbered));
+            let rendered = &elem.render(numbered);
+            debug!("rendered elem: {:?}", rendered);
+            output.push_str(rendered);
         }
         format!(
             "<{oul}>\n{output}\n</{oul}>\n",

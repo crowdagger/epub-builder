@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use errors::Result;
+use crate::errors::Result;
 
 use std::io::Read;
 use std::io::Write;
@@ -17,5 +17,5 @@ pub trait Zip {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, file: P, content: R) -> Result<()>;
 
     /// Generate the ZIP file
-    fn generate<W: Write>(&mut self, W) -> Result<()>;
+    fn generate<W: Write>(&mut self, to: W) -> Result<()>;
 }

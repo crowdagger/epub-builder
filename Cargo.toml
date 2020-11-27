@@ -8,6 +8,7 @@ keywords = ["epub"]
 repository = "https://github.com/lise-henry/epub-builder/"
 documentation = "https://docs.rs/epub-builder"
 license = "MPL-2.0"
+edition = "2018"
 
 [lib]
 name = "epub_builder"
@@ -28,6 +29,8 @@ tempdir = { version = "0.3", optional = true }
 zip = { version = "0.5", optional = true } 
 regex = "1"
 html-escape = "0.2.6"
+env_logger = "0.8"
+log = "0.4"
 
 [dev-dependencies]
 pretty_assertions = "0.6"

@@ -153,6 +153,8 @@ extern crate zip as libzip;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+#[macro_use]
+extern crate log;
 
 mod common;
 mod epub;
@@ -176,7 +178,6 @@ pub use epub_content::ReferenceType;
 pub use errors::*;
 pub use toc::Toc;
 pub use toc::TocElement;
-pub use zip::Zip;
 #[cfg(feature = "zip-command")]
 pub use zip_command::ZipCommand;
 #[cfg(feature = "zip-command")]
