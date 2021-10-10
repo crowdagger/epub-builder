@@ -9,6 +9,6 @@
     <text>{{{toc_name}}}</text>
   </docTitle>
   <navMap>
-    {{{nav_points}}}
+{{{nav_points}}}
   </navMap>
 </ncx>

@@ -7,18 +7,18 @@
     <dc:date>{{{date}}}</dc:date>
     <dc:language>{{{lang}}}</dc:language>
     <dc:creator opf:role="aut">{{{author}}}</dc:creator>
-    {{{optional}}}
+{{{optional}}}
   </metadata>
   <manifest>
-    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml" />
-    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" />
-    {{{items}}}
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml"/>
+{{{items}}}
   </manifest>
   <spine toc="ncx">
-    {{{itemrefs}}}
+{{{itemrefs}}}
   </spine>
   <guide>
-    <reference type="toc" title="{{{toc_name}}}" href="nav.xhtml" />
-    {{{guide}}}
+    <reference type="toc" title="{{{toc_name}}}" href="nav.xhtml"/>
+{{{guide}}}
   </guide>
 </package>
