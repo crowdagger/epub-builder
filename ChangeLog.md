@@ -1,9 +1,9 @@
 ChangeLog
 ==========
 
-unreleased
-============
-
+0.4.9 (2022-01-17)
+=====================
+* Add support for multiple authors, subjects and descriptions
 * Fix empty lines and indentation of elements
 * Only include the deflate feature for zip
 
