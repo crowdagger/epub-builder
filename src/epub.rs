@@ -38,12 +38,12 @@ pub enum EpubVersion {
 #[derive(Debug)]
 struct Metadata {
     pub title: String,
-    pub author: String,
+    pub author: Vec<String>,
     pub lang: String,
     pub generator: String,
     pub toc_name: String,
-    pub description: Option<String>,
-    pub subject: Option<String>,
+    pub description: Vec<String>,
+    pub subject: Vec<String>,
     pub license: Option<String>,
 }
 
@@ -52,12 +52,12 @@ impl Metadata {
     pub fn new() -> Metadata {
         Metadata {
             title: String::new(),
-            author: String::new(),
+            author: vec![],
             lang: String::from("en"),
             generator: String::from("Rust EPUB library"),
             toc_name: String::from("Table Of Contents"),
-            description: None,
-            subject: None,
+            description: vec![],
+            subject: vec![],
             license: None,
         }
     }
@@ -106,6 +106,7 @@ impl Content {
 /// // "Empty" EPUB file
 /// let mut builder = EpubBuilder::new(ZipCommand::new().unwrap()).unwrap();
 /// builder.metadata("title", "Empty EPUB").unwrap();
+/// builder.metadata("author", "Ann 'Onymous").unwrap();
 /// builder.generate(&mut io::stdout()).unwrap();
 /// ```
 #[derive(Debug)]
@@ -155,6 +156,10 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Set some EPUB metadata
     ///
+    /// For most metadata, this function will replace the existing metadata, but for subject, cteator and identifier who
+    /// can have multiple values, it will add data to the existing data, unless the empty string "" is passed, in which case
+    /// it will delete existing data for this key.
+    ///
     /// # Valid keys used by the EPUB builder
     ///
     /// * `author`: author(s) of the book;
@@ -173,12 +178,33 @@ impl<Z: Zip> EpubBuilder<Z> {
         S2: Into<String>,
     {
         match key.as_ref() {
-            "author" => self.metadata.author = value.into(),
+            "author" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.author = vec![];
+                } else {
+                    self.metadata.author.push(value.into());
+                }
+            },
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
             "generator" => self.metadata.generator = value.into(),
-            "description" => self.metadata.description = Some(value.into()),
-            "subject" => self.metadata.subject = Some(value.into()),
+            "description" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.description = vec![];
+                } else {
+                    self.metadata.description.push(value.into());
+                }
+            },
+            "subject" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.subject = vec![];
+                } else {
+                    self.metadata.subject.push(value.into());
+                }
+            },
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
             s => bail!("invalid metadata '{}'", s),
@@ -369,10 +395,10 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Render content.opf file
     fn render_opf(&mut self) -> Result<Vec<u8>> {
         let mut optional: Vec<String> = Vec::new();
-        if let Some(ref desc) = self.metadata.description {
+        for desc in &self.metadata.description {
             optional.push(format!("<dc:description>{}</dc:description>", desc));
         }
-        if let Some(ref subject) = self.metadata.subject {
+        for subject in &self.metadata.subject {
             optional.push(format!("<dc:subject>{}</dc:subject>", subject));
         }
         if let Some(ref rights) = self.metadata.license {
@@ -441,7 +467,13 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let data = MapBuilder::new()
             .insert_str("lang", self.metadata.lang.as_str())
-            .insert_str("author", self.metadata.author.as_str())
+            .insert_vec("author", |builder| {
+                let mut builder = builder;
+                for author in &self.metadata.author {
+                    builder = builder.push_str(author);
+                }
+                builder
+            })
             .insert_str("title", self.metadata.title.as_str())
             .insert_str("generator", self.metadata.generator.as_str())
             .insert_str("toc_name", self.metadata.toc_name.as_str())

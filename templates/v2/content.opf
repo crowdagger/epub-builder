@@ -6,7 +6,9 @@
     <dc:title>{{{title}}}</dc:title>
     <dc:date>{{{date}}}</dc:date>
     <dc:language>{{{lang}}}</dc:language>
-    <dc:creator opf:role="aut">{{{author}}}</dc:creator>
+    {{#author}}
+    <dc:creator opf:role="aut">{{{.}}}</dc:creator>
+    {{/author}}
 {{{optional}}}
   </metadata>
   <manifest>

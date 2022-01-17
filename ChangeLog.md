@@ -1,6 +1,13 @@
 ChangeLog
 ==========
 
+unreleased
+============
+
+* Fix empty lines and indentation of elements
+* Only include the deflate feature for zip
+
+
 0.4.8 (2020-09-29)
 =====================
 * Fix TOC when chapter titles contain HTML (see issue #13)
