@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.4.10 (2022-01-17)
+=======================
+* Fix EPUB3 typo induced in last update.
+	
 0.4.9 (2022-01-17)
 =====================
 * Add support for multiple authors, subjects and descriptions
