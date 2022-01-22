@@ -2,15 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use common;
-use epub_content::EpubContent;
-use epub_content::ReferenceType;
-use errors::Result;
-use errors::ResultExt;
-use templates;
-use toc::Toc;
-use toc::TocElement;
-use zip::Zip;
+use crate::{EpubContent, common};
+use crate::ReferenceType;
+use crate::errors::Result;
+use crate::ResultExt;
+use crate::templates;
+use crate::toc::{Toc, TocElement};
+use crate::zip::Zip;
 
 use std::io;
 use std::io::Read;
@@ -268,6 +266,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     {
         self.zip
             .write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
+        debug!("Add resource: {:?}", path.as_ref().display());
         self.files.push(Content::new(
             format!("{}", path.as_ref().display()),
             mime_type,
@@ -394,6 +393,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Render content.opf file
     fn render_opf(&mut self) -> Result<Vec<u8>> {
+        debug!("render_opf...");
         let mut optional: Vec<String> = Vec::new();
         for desc in &self.metadata.description {
             optional.push(format!("<dc:description>{}</dc:description>", desc));
@@ -424,6 +424,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             if content.cover {
                 optional.push("<meta name=\"cover\" content=\"cover-image\"/>".to_string());
             }
+            debug!("id={:?}, mime={:?}", id, content.mime);
             items.push(format!(
                 "<item media-type=\"{mime}\" {properties}\
                         id=\"{id}\" href=\"{href}\"/>",
@@ -436,7 +437,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 itemrefs.push(format!("<itemref idref=\"{id}\"/>", id = id));
             }
             if let Some(reftype) = content.reftype {
-                use epub_content::ReferenceType::*;
+                use crate::ReferenceType::*;
                 let reftype = match reftype {
                     Cover => "cover",
                     TitlePage => "title-page",
@@ -456,10 +457,12 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Preface => "preface",
                     Text => "text",
                 };
+                debug!("content = {:?}", &content);
                 guide.push(format!(
                     "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\"/>",
                     reftype = reftype,
-                    title = common::escape_quote(content.title.as_str()),
+                    // escape < > symbols by &lt; &gt; using 'encode_text()' in Title
+                    title = common::escape_quote(html_escape::encode_text(content.title.as_str())),
                     href = content.file
                 ));
             }

@@ -2,10 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use errors::Result;
-use zip::Zip;
-use zip_command::ZipCommand;
-use zip_library::ZipLibrary;
+use crate::errors::Result;
+use crate::zip::Zip;
+use crate::ZipCommand;
+use crate::ZipLibrary;
 
 use std::io::Read;
 use std::io::Write;

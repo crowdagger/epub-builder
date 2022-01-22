@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use errors::Result;
-use errors::ResultExt;
-use zip::Zip;
+use crate::Result;
+use crate::ResultExt;
+use crate::zip::Zip;
 
 use std::fs;
 use std::fs::DirBuilder;

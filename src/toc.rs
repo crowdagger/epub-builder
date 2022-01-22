@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
-use common;
+use crate::common;
 
 /// An element of the [Table of contents](struct.Toc.html)
 ///
@@ -162,7 +162,8 @@ impl TocElement {
 {children}
 </li>",
                 link = self.url,
-                title = self.title,
+                // escape < > symbols by &lt; &gt; using 'encode_text()' in link's Title
+            title = html_escape::encode_text(&self.title),
                 children = common::indent(children, 1)
             )
         }
@@ -264,6 +265,7 @@ impl Toc {
     pub fn render(&mut self, numbered: bool) -> String {
         let mut output: Vec<String> = Vec::new();
         for elem in &self.elements {
+            debug!("rendered elem: {:?}", &elem.render(numbered));
             output.push(elem.render(numbered));
         }
         common::indent(
