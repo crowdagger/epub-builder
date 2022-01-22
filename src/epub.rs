@@ -10,7 +10,6 @@ use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
 
-use std::fmt::Write;
 use std::io;
 use std::io::Read;
 use std::path::Path;
@@ -37,12 +36,12 @@ pub enum EpubVersion {
 #[derive(Debug)]
 struct Metadata {
     pub title: String,
-    pub author: String,
+    pub author: Vec<String>,
     pub lang: String,
     pub generator: String,
     pub toc_name: String,
-    pub description: Option<String>,
-    pub subject: Option<String>,
+    pub description: Vec<String>,
+    pub subject: Vec<String>,
     pub license: Option<String>,
 }
 
@@ -51,12 +50,12 @@ impl Metadata {
     pub fn new() -> Metadata {
         Metadata {
             title: String::new(),
-            author: String::new(),
+            author: vec![],
             lang: String::from("en"),
             generator: String::from("Rust EPUB library"),
             toc_name: String::from("Table Of Contents"),
-            description: None,
-            subject: None,
+            description: vec![],
+            subject: vec![],
             license: None,
         }
     }
@@ -105,6 +104,7 @@ impl Content {
 /// // "Empty" EPUB file
 /// let mut builder = EpubBuilder::new(ZipCommand::new().unwrap()).unwrap();
 /// builder.metadata("title", "Empty EPUB").unwrap();
+/// builder.metadata("author", "Ann 'Onymous").unwrap();
 /// builder.generate(&mut io::stdout()).unwrap();
 /// ```
 #[derive(Debug)]
@@ -154,6 +154,10 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Set some EPUB metadata
     ///
+    /// For most metadata, this function will replace the existing metadata, but for subject, cteator and identifier who
+    /// can have multiple values, it will add data to the existing data, unless the empty string "" is passed, in which case
+    /// it will delete existing data for this key.
+    ///
     /// # Valid keys used by the EPUB builder
     ///
     /// * `author`: author(s) of the book;
@@ -172,12 +176,33 @@ impl<Z: Zip> EpubBuilder<Z> {
         S2: Into<String>,
     {
         match key.as_ref() {
-            "author" => self.metadata.author = value.into(),
+            "author" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.author = vec![];
+                } else {
+                    self.metadata.author.push(value.into());
+                }
+            },
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
             "generator" => self.metadata.generator = value.into(),
-            "description" => self.metadata.description = Some(value.into()),
-            "subject" => self.metadata.subject = Some(value.into()),
+            "description" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.description = vec![];
+                } else {
+                    self.metadata.description.push(value.into());
+                }
+            },
+            "subject" => {
+                let value = value.into();
+                if value == "" {
+                        self.metadata.subject = vec![];
+                } else {
+                    self.metadata.subject.push(value.into());
+                }
+            },
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
             s => bail!("invalid metadata '{}'", s),
@@ -369,22 +394,22 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Render content.opf file
     fn render_opf(&mut self) -> Result<Vec<u8>> {
         debug!("render_opf...");
-        let mut optional = String::new();
-        if let Some(ref desc) = self.metadata.description {
-            write!(optional, "<dc:description>{}</dc:description>\n", desc)?;
+        let mut optional: Vec<String> = Vec::new();
+        for desc in &self.metadata.description {
+            optional.push(format!("<dc:description>{}</dc:description>", desc));
         }
-        if let Some(ref subject) = self.metadata.subject {
-            write!(optional, "<dc:subject>{}</dc:subject>\n", subject)?;
+        for subject in &self.metadata.subject {
+            optional.push(format!("<dc:subject>{}</dc:subject>", subject));
         }
         if let Some(ref rights) = self.metadata.license {
-            write!(optional, "<dc:rights>{}</dc:rights>\n", rights)?;
+            optional.push(format!("<dc:rights>{}</dc:rights>", rights));
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
         let uuid = uuid::adapter::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
-        let mut items = String::new();
-        let mut itemrefs = String::new();
-        let mut guide = String::new();
+        let mut items: Vec<String> = Vec::new();
+        let mut itemrefs: Vec<String> = Vec::new();
+        let mut guide: Vec<String> = Vec::new();
 
         for content in &self.files {
             let id = if content.cover {
@@ -393,27 +418,23 @@ impl<Z: Zip> EpubBuilder<Z> {
                 to_id(&content.file)
             };
             let properties = match (self.version, content.cover) {
-                (EpubVersion::V30, true) => "properties=\"cover-image\"",
+                (EpubVersion::V30, true) => "properties=\"cover-image\" ",
                 _ => "",
             };
             if content.cover {
-                write!(
-                    optional,
-                    "<meta name=\"cover\" content=\"cover-image\" />\n"
-                )?;
+                optional.push("<meta name=\"cover\" content=\"cover-image\"/>".to_string());
             }
             debug!("id={:?}, mime={:?}", id, content.mime);
-            write!(
-                items,
-                "<item media-type=\"{mime}\" {properties} \
-                    id=\"{id}\" href=\"{href}\" />\n",
+            items.push(format!(
+                "<item media-type=\"{mime}\" {properties}\
+                        id=\"{id}\" href=\"{href}\"/>",
                 properties = properties,
                 mime = content.mime,
                 id = id,
                 href = content.file
-            )?;
+            ));
             if content.itemref {
-                write!(itemrefs, "<itemref idref=\"{id}\" />\n", id = id)?;
+                itemrefs.push(format!("<itemref idref=\"{id}\"/>", id = id));
             }
             if let Some(reftype) = content.reftype {
                 use crate::ReferenceType::*;
@@ -437,29 +458,34 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Text => "text",
                 };
                 debug!("content = {:?}", &content);
-                write!(
-                    guide,
-                    "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\" />\n",
+                guide.push(format!(
+                    "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\"/>",
                     reftype = reftype,
                     // escape < > symbols by &lt; &gt; using 'encode_text()' in Title
                     title = common::escape_quote(html_escape::encode_text(content.title.as_str())),
                     href = content.file
-                )?;
+                ));
             }
         }
 
         let data = MapBuilder::new()
             .insert_str("lang", self.metadata.lang.as_str())
-            .insert_str("author", self.metadata.author.as_str())
+            .insert_vec("author", |builder| {
+                let mut builder = builder;
+                for author in &self.metadata.author {
+                    builder = builder.push_str(author);
+                }
+                builder
+            })
             .insert_str("title", self.metadata.title.as_str())
             .insert_str("generator", self.metadata.generator.as_str())
             .insert_str("toc_name", self.metadata.toc_name.as_str())
-            .insert_str("optional", optional)
-            .insert_str("items", items)
-            .insert_str("itemrefs", itemrefs)
+            .insert_str("optional", common::indent(optional.join("\n"), 2))
+            .insert_str("items", common::indent(items.join("\n"), 2))
+            .insert_str("itemrefs", common::indent(itemrefs.join("\n"), 2))
             .insert_str("date", date.to_string())
             .insert_str("uuid", uuid)
-            .insert_str("guide", guide)
+            .insert_str("guide", common::indent(guide.join("\n"), 2))
             .build();
 
         let mut content = vec![];
@@ -494,7 +520,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Render nav.xhtml
     fn render_nav(&mut self, numbered: bool) -> Result<Vec<u8>> {
         let content = self.toc.render(numbered);
-        let mut landmarks = String::new();
+        let mut landmarks: Vec<String> = Vec::new();
         if self.version > EpubVersion::V20 {
             for file in &self.files {
                 if let Some(ref reftype) = file.reftype {
@@ -519,27 +545,33 @@ impl<Z: Zip> EpubBuilder<Z> {
                         Dedication => "dedication",
                     };
                     if !file.title.is_empty() {
-                        write!(
-                            landmarks,
+                        landmarks.push(format!(
                             "<li><a epub:type=\"{reftype}\" href=\"{href}\">\
-                                {title}</a></li>\n",
+                                {title}</a></li>",
                             reftype = reftype,
                             href = file.file,
                             title = file.title
-                        )?;
+                        ));
                     }
                 }
             }
-        }
-        if !landmarks.is_empty() {
-            landmarks = format!("<ol>\n{}\n</ol>", landmarks);
         }
 
         let data = MapBuilder::new()
             .insert_str("content", content)
             .insert_str("toc_name", self.metadata.toc_name.as_str())
             .insert_str("generator", self.metadata.generator.as_str())
-            .insert_str("landmarks", landmarks)
+            .insert_str(
+                "landmarks",
+                if !landmarks.is_empty() {
+                    common::indent(
+                        format!("<ol>\n{}\n</ol>", common::indent(landmarks.join("\n"), 1)),
+                        2,
+                    )
+                } else {
+                    String::new()
+                },
+            )
             .build();
 
         let mut res = vec![];
