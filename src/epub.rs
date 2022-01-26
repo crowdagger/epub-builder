@@ -21,15 +21,13 @@ use uuid;
 /// Represents the EPUB version.
 ///
 /// Currently, this library supports EPUB 2.0.1 and 3.0.1.
+#[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum EpubVersion {
     /// EPUB 2.0.1 format
     V20,
     /// EPUB 3.0.1 format
     V30,
-    /// Hint that destructuring should not be exhaustive
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 
 /// EPUB Metadata
@@ -492,7 +490,6 @@ impl<Z: Zip> EpubBuilder<Z> {
         let res = match self.version {
             EpubVersion::V20 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
-            EpubVersion::__NonExhaustive => unreachable!(),
         };
 
         res.chain_err(|| "could not render template for content.opf")?;
@@ -578,7 +575,6 @@ impl<Z: Zip> EpubBuilder<Z> {
         let eh = match self.version {
             EpubVersion::V20 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
             EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
-            EpubVersion::__NonExhaustive => unreachable!(),
         };
 
         eh.chain_err(|| "error rendering nav.xhtml template")?;
