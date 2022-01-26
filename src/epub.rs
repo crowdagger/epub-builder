@@ -14,9 +14,7 @@ use std::io;
 use std::io::Read;
 use std::path::Path;
 
-use chrono;
 use mustache::MapBuilder;
-use uuid;
 
 /// Represents the EPUB version.
 ///
@@ -121,7 +119,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
-            zip: zip,
+            zip,
             files: vec![],
             metadata: Metadata::new(),
             toc: Toc::new(),
@@ -176,10 +174,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         match key.as_ref() {
             "author" => {
                 let value = value.into();
-                if value == "" {
+                if value.is_empty() {
                         self.metadata.author = vec![];
                 } else {
-                    self.metadata.author.push(value.into());
+                    self.metadata.author.push(value);
                 }
             },
             "title" => self.metadata.title = value.into(),
@@ -187,18 +185,18 @@ impl<Z: Zip> EpubBuilder<Z> {
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
-                if value == "" {
+                if value.is_empty() {
                         self.metadata.description = vec![];
                 } else {
-                    self.metadata.description.push(value.into());
+                    self.metadata.description.push(value);
                 }
             },
             "subject" => {
                 let value = value.into();
-                if value == "" {
+                if value.is_empty() {
                         self.metadata.subject = vec![];
                 } else {
-                    self.metadata.subject.push(value.into());
+                    self.metadata.subject.push(value);
                 }
             },
             "license" => self.metadata.license = Some(value.into()),

@@ -37,6 +37,7 @@ pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
 }
 
 #[test]
+#[allow(clippy::blacklisted_name)]
 fn test_escape() {
     let foo = "Some string with \"quote\"";
     assert_eq!(&escape_quote(foo), "Some string with &quot;quote&quot;");
@@ -46,6 +47,7 @@ fn test_escape() {
 }
 
 #[test]
+#[allow(clippy::blacklisted_name)]
 fn test_indent() {
     let foo = "Some string with only one line";
     assert_eq!(indent(foo, 3), "      Some string with only one line");

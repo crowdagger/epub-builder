@@ -48,12 +48,12 @@ impl ZipLibrary {
                 "mimetype",
                 FileOptions::default().compression_method(CompressionMethod::Stored),
             )
-            .chain_err(|| format!("could not create mimetype in epub"))?;
+            .chain_err(|| "could not create mimetype in epub".to_string())?;
         writer
             .write(b"application/epub+zip")
-            .chain_err(|| format!("could not write mimetype in epub"))?;
+            .chain_err(|| "could not write mimetype in epub".to_string())?;
 
-        Ok(ZipLibrary { writer: writer })
+        Ok(ZipLibrary { writer })
     }
 }
 

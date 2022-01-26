@@ -47,7 +47,7 @@ impl ZipCommandOrLibrary {
                 z
             })
             .and_then(|z| z.test().map(|_| z))
-            .map(|z| ZipCommandOrLibrary::Command(z))
-            .or_else(|_| ZipLibrary::new().map(|l| ZipCommandOrLibrary::Library(l)))
+            .map(ZipCommandOrLibrary::Command)
+            .or_else(|_| ZipLibrary::new().map(ZipCommandOrLibrary::Library))
     }
 }

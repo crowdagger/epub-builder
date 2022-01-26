@@ -40,7 +40,7 @@ impl ZipCommand {
         let temp_dir = TempDir::new("epub").chain_err(|| "could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
-            temp_dir: temp_dir,
+            temp_dir,
             files: vec![],
         };
         Ok(zip)
@@ -55,7 +55,7 @@ impl ZipCommand {
             .chain_err(|| "could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
-            temp_dir: temp_dir,
+            temp_dir,
             files: vec![],
         };
         Ok(zip)
@@ -88,7 +88,7 @@ impl ZipCommand {
     fn add_to_tmp_dir<P: AsRef<Path>, R: Read>(&mut self, path: P, mut content: R) -> Result<()> {
         let dest_file = self.temp_dir.path().join(path.as_ref());
         let dest_dir = dest_file.parent().unwrap();
-        if !fs::metadata(dest_dir).is_ok() {
+        if fs::metadata(dest_dir).is_err() {
             // dir does not exist, create it
             DirBuilder::new()
                 .recursive(true)
