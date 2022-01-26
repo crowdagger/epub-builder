@@ -1,5 +1,10 @@
 ChangeLog
 ==========
+0.5.0 (2022-01-26)
+=====================
+* Move to Rust 2021 edition
+* Escape invalid  < and > in XHTML code
+
 
 0.4.10 (2022-01-17)
 =======================
