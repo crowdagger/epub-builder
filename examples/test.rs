@@ -7,10 +7,10 @@ use epub_builder::Result;
 use epub_builder::TocElement;
 use epub_builder::ZipLibrary;
 
-use std::io;
-use std::io::Write;
 use std::env;
 use std::fs::File;
+use std::io;
+use std::io::Write;
 #[macro_use]
 extern crate log;
 
@@ -80,7 +80,7 @@ fn run() -> Result<()> {
         .inline_toc()
         // Finally, write the EPUB file to stdout
         .generate(&mut io::stdout())?; // generate into stout
-        // .generate(&_writer)?; // generate into temp file to see epub internals
+                                       // .generate(&_writer)?; // generate into temp file to see epub internals
     debug!("dummy book generation is done");
     Ok(())
 }
@@ -90,7 +90,8 @@ fn main() {
         Ok(_) => writeln!(
             &mut io::stderr(),
             "Successfully wrote epub document to stdout!"
-        ).unwrap(),
+        )
+        .unwrap(),
         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err).unwrap(),
     };
 }

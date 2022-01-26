@@ -2,13 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{EpubContent, common};
-use crate::ReferenceType;
 use crate::errors::Result;
-use crate::ResultExt;
 use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
+use crate::ReferenceType;
+use crate::ResultExt;
+use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
@@ -175,30 +175,30 @@ impl<Z: Zip> EpubBuilder<Z> {
             "author" => {
                 let value = value.into();
                 if value.is_empty() {
-                        self.metadata.author = vec![];
+                    self.metadata.author = vec![];
                 } else {
                     self.metadata.author.push(value);
                 }
-            },
+            }
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
                 if value.is_empty() {
-                        self.metadata.description = vec![];
+                    self.metadata.description = vec![];
                 } else {
                     self.metadata.description.push(value);
                 }
-            },
+            }
             "subject" => {
                 let value = value.into();
                 if value.is_empty() {
-                        self.metadata.subject = vec![];
+                    self.metadata.subject = vec![];
                 } else {
                     self.metadata.subject.push(value);
                 }
-            },
+            }
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
             s => bail!("invalid metadata '{}'", s),
