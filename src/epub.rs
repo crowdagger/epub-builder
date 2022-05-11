@@ -586,7 +586,8 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 }
 
-// generate an id compatible string, replacing / and . by _
+// generate an id compatible string, replacing all none alphanumerics to underscores
+// The actual rules for ID are here - https://www.w3.org/TR/xml-names11/#NT-NCNameChar
 fn to_id(s: &str) -> String {
-    s.replace(".", "_").replace("/", "_")
+    s.replace(|c: char| !c.is_alphanumeric(), "_")
 }
