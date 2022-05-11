@@ -586,7 +586,35 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 }
 
-// generate an id compatible string, replacing / and . by _
+// The actual rules for ID are here - https://www.w3.org/TR/xml-names11/#NT-NCNameChar
+// Ordering to to look as similar as possible to the W3 Recommendation ruleset
+// Slightly more permissive, there are some that are invalid start chars, but this is ok.
+fn is_id_char(c: char) -> bool {
+    false
+        || { c >= 'A' && c <= 'Z' }
+        || { c == '_' }
+        || { c >= 'a' && c <= 'z' }
+        || { c >= '\u{C0}' && c <= '\u{D6}' }
+        || { c >= '\u{D8}' && c <= '\u{F6}' }
+        || { c >= '\u{F8}' && c <= '\u{2FF}' }
+        || { c >= '\u{370}' && c <= '\u{37D}' }
+        || { c >= '\u{37F}' && c <= '\u{1FFF}' }
+        || { c >= '\u{200C}' && c <= '\u{200D}' }
+        || { c >= '\u{2070}' && c <= '\u{218F}' }
+        || { c >= '\u{2C00}' && c <= '\u{2FEF}' }
+        || { c >= '\u{3001}' && c <= '\u{D7FF}' }
+        || { c >= '\u{F900}' && c <= '\u{FDCF}' }
+        || { c >= '\u{FDF0}' && c <= '\u{FFFD}' }
+        || { c >= '\u{10000}' && c <= '\u{EFFFF}' }
+        || { c == '-' }
+        || { c == '.' }
+        || { c >= '0' && c <= '9' }
+        || { c == '\u{B7}' }
+        || { c >= '\u{0300}' && c <= '\u{036F}' }
+        || { c >= '\u{203F}' && c <= '\u{2040}' }
+}
+
+// generate an id compatible string, replacing all none ID chars to underscores
 fn to_id(s: &str) -> String {
-    s.replace(".", "_").replace("/", "_")
+    s.replace(|c: char| !is_id_char(c), "_")
 }
