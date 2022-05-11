@@ -88,7 +88,7 @@ impl<R: Read> EpubContent<R> {
     /// (meaning it won't be added to the [`Table of Contents`](struct.Toc.html).
     pub fn new<S: Into<String>>(href: S, content: R) -> Self {
         EpubContent {
-            content: content,
+            content,
             toc: TocElement::new(href, ""),
             reftype: None,
         }

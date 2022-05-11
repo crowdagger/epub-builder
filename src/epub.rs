@@ -2,34 +2,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::{EpubContent, common};
-use crate::ReferenceType;
 use crate::errors::Result;
-use crate::ResultExt;
 use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
+use crate::ReferenceType;
+use crate::ResultExt;
+use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
 use std::path::Path;
 
-use chrono;
 use mustache::MapBuilder;
-use uuid;
 
 /// Represents the EPUB version.
 ///
 /// Currently, this library supports EPUB 2.0.1 and 3.0.1.
+#[non_exhaustive]
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum EpubVersion {
     /// EPUB 2.0.1 format
     V20,
     /// EPUB 3.0.1 format
     V30,
-    /// Hint that destructuring should not be exhaustive
-    #[doc(hidden)]
-    __NonExhaustive,
 }
 
 /// EPUB Metadata
@@ -123,7 +119,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
-            zip: zip,
+            zip,
             files: vec![],
             metadata: Metadata::new(),
             toc: Toc::new(),
@@ -178,31 +174,31 @@ impl<Z: Zip> EpubBuilder<Z> {
         match key.as_ref() {
             "author" => {
                 let value = value.into();
-                if value == "" {
-                        self.metadata.author = vec![];
+                if value.is_empty() {
+                    self.metadata.author = vec![];
                 } else {
-                    self.metadata.author.push(value.into());
+                    self.metadata.author.push(value);
                 }
-            },
+            }
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
-                if value == "" {
-                        self.metadata.description = vec![];
+                if value.is_empty() {
+                    self.metadata.description = vec![];
                 } else {
-                    self.metadata.description.push(value.into());
+                    self.metadata.description.push(value);
                 }
-            },
+            }
             "subject" => {
                 let value = value.into();
-                if value == "" {
-                        self.metadata.subject = vec![];
+                if value.is_empty() {
+                    self.metadata.subject = vec![];
                 } else {
-                    self.metadata.subject.push(value.into());
+                    self.metadata.subject.push(value);
                 }
-            },
+            }
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
             s => bail!("invalid metadata '{}'", s),
@@ -492,7 +488,6 @@ impl<Z: Zip> EpubBuilder<Z> {
         let res = match self.version {
             EpubVersion::V20 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
-            EpubVersion::__NonExhaustive => unreachable!(),
         };
 
         res.chain_err(|| "could not render template for content.opf")?;
@@ -578,7 +573,6 @@ impl<Z: Zip> EpubBuilder<Z> {
         let eh = match self.version {
             EpubVersion::V20 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
             EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
-            EpubVersion::__NonExhaustive => unreachable!(),
         };
 
         eh.chain_err(|| "error rendering nav.xhtml template")?;

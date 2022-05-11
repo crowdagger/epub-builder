@@ -163,7 +163,7 @@ impl TocElement {
 </li>",
                 link = self.url,
                 // escape < > symbols by &lt; &gt; using 'encode_text()' in link's Title
-            title = html_escape::encode_text(&self.title),
+                title = html_escape::encode_text(&self.title),
                 children = common::indent(children, 1)
             )
         }

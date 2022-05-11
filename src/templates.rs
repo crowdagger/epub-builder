@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-pub static IBOOKS: &'static [u8] = include_bytes!("../templates/ibooks.xml");
-pub static CONTAINER: &'static [u8] = include_bytes!("../templates/container.xml");
+pub static IBOOKS: &[u8] = include_bytes!("../templates/ibooks.xml");
+pub static CONTAINER: &[u8] = include_bytes!("../templates/container.xml");
 
 lazy_static! {
     pub static ref TOC_NCX: ::mustache::Template =
