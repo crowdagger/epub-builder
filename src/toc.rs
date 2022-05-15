@@ -140,10 +140,11 @@ impl TocElement {
             return String::new();
         }
         if self.children.is_empty() {
+            let escaped_title = html_escape::encode_text(&self.title);
             format!(
                 "<li><a href=\"{link}\">{title}</a></li>",
                 link = self.url,
-                title = self.title,
+                title = escaped_title,
             )
         } else {
             let mut output: Vec<String> = Vec::new();
