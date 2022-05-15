@@ -427,7 +427,8 @@ impl<Z: Zip> EpubBuilder<Z> {
                 properties = properties,
                 mime = content.mime,
                 id = id,
-                href = content.file
+                // in the zip the path is always with forward slashes, on windows it is with backslashes
+                href = content.file.replace("\\", "/")
             ));
             if content.itemref {
                 itemrefs.push(format!("<itemref idref=\"{id}\"/>", id = id));
