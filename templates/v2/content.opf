@@ -7,7 +7,7 @@
     <dc:date>{{{date}}}</dc:date>
     <dc:language>{{{lang}}}</dc:language>
     {{#author}}
-    <dc:creator opf:role="aut">{{{.}}}</dc:creator>
+    <dc:creator opf:role="aut">{{{name}}}</dc:creator>
     {{/author}}
 {{{optional}}}
   </metadata>

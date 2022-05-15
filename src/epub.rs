@@ -469,8 +469,12 @@ impl<Z: Zip> EpubBuilder<Z> {
             .insert_str("lang", self.metadata.lang.as_str())
             .insert_vec("author", |builder| {
                 let mut builder = builder;
-                for author in &self.metadata.author {
-                    builder = builder.push_str(author);
+                for (i, author) in self.metadata.author.iter().enumerate() {
+                    builder = builder.push_map(|builder| {
+                        builder
+                            .insert_str("id".to_string(), i.to_string())
+                            .insert_str("name".to_string(), author)
+                    });
                 }
                 builder
             })

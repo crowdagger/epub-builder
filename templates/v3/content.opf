@@ -7,9 +7,9 @@
     <dc:date>{{{date}}}</dc:date>
     <dc:language>{{{lang}}}</dc:language>
     {{#author}}
-    <dc:creator id="epub-creator-1">{{{.}}}</dc:creator>
+    <dc:creator id="epub-creator-{{{id}}}">{{{name}}}</dc:creator>
+    <meta refines="#epub-creator-{{{id}}}" property="role" scheme="marc:relators">aut</meta>
     {{/author}}
-    <meta refines="#epub-creator-1" property="role" scheme="marc:relators">aut</meta>
     <meta property="dcterms:modified">{{{date}}}</meta>
 {{{optional}}}
   </metadata>
