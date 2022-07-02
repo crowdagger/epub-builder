@@ -76,7 +76,7 @@ impl ZipCommand {
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if !output.status.success() {
             bail!(
-                "command {name} didn't return succesfully: {output}",
+                "command {name} didn't return successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
             );
@@ -144,7 +144,7 @@ impl Zip for ZipCommand {
             .chain_err(|| format!("failed to run command {name}", name = self.command))?;
         if !output.status.success() {
             bail!(
-                "command {name} didn't return succesfully: {output}",
+                "command {name} didn't return successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
             );
@@ -169,7 +169,7 @@ impl Zip for ZipCommand {
             Ok(())
         } else {
             bail!(
-                "command {name} didn't return succesfully: {output}",
+                "command {name} didn't return successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
             );
