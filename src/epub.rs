@@ -158,7 +158,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     ///
     /// * `author`: author(s) of the book;
     /// * `title`: title of the book;
-    /// * `lang`: the language ot the book, quite important as EPUB renderers rely on it
+    /// * `lang`: the language of the book, quite important as EPUB renderers rely on it
     ///   for e.g. hyphenating words.
     /// * `generator`: generator of the book (should be your program name);
     /// * `toc_name`: the name to use for table of contents (by default, "Table of Contents");
@@ -250,7 +250,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     ///
     /// # Arguments
     ///
-    /// * `path`: the path where this file will be writen in the EPUB OEBPS structure,
+    /// * `path`: the path where this file will be written in the EPUB OEBPS structure,
     ///   e.g. `data/image_0.png`
     /// * `content`: the resource to include
     /// * `mime_type`: the mime type of this file, e.g. "image/png".
@@ -273,7 +273,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Add a cover image to the EPUB.
     ///
     /// This works similarly to adding the image as a resource with the `add_resource`
-    /// method, except, it signals it in the Manifest secton so it is displayed as the
+    /// method, except, it signals it in the Manifest section so it is displayed as the
     /// cover by Ereaders
     pub fn add_cover_image<R, P, S>(
         &mut self,
