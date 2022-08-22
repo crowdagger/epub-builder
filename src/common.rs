@@ -2,16 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 
 use std::borrow::Cow;
 
 /// Escape quotes from the string
 pub fn escape_quote<'a, S: Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
-    lazy_static! {
-        static ref REGEX: Regex = Regex::new(r#"""#).unwrap();
-    }
+    static REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"""#).expect("This is a valid regexp"));
 
     let s = s.into();
     if REGEX.is_match(&s) {
