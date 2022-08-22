@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use lazy_static::lazy_static;
+
 pub static IBOOKS: &[u8] = include_bytes!("../templates/ibooks.xml");
 pub static CONTAINER: &[u8] = include_bytes!("../templates/container.xml");
 
@@ -12,6 +14,8 @@ lazy_static! {
 }
 
 pub mod v2 {
+    use lazy_static::lazy_static;
+
     lazy_static! {
         pub static ref CONTENT_OPF: ::mustache::Template =
             ::mustache::compile_str(include_str!("../templates/v2/content.opf"))
@@ -22,6 +26,8 @@ pub mod v2 {
     }
 }
 pub mod v3 {
+    use lazy_static::lazy_static;
+
     lazy_static! {
         pub static ref CONTENT_OPF: ::mustache::Template =
             ::mustache::compile_str(include_str!("../templates/v3/content.opf"))

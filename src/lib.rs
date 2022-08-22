@@ -129,23 +129,6 @@
 //! version 2.0](https://www.mozilla.org/en-US/MPL/2.0/).
 #![deny(missing_docs)]
 
-#[macro_use]
-extern crate lazy_static;
-extern crate chrono;
-extern crate html_escape;
-extern crate mustache;
-extern crate regex;
-#[cfg(feature = "zip-command")]
-extern crate tempdir;
-extern crate uuid;
-#[cfg(feature = "zip-library")]
-extern crate zip as libzip;
-#[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
-#[macro_use]
-extern crate log;
-
 mod common;
 mod epub;
 mod epub_content;

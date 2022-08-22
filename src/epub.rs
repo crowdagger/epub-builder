@@ -261,7 +261,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     {
         self.zip
             .write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
-        debug!("Add resource: {:?}", path.as_ref().display());
+        log::debug!("Add resource: {:?}", path.as_ref().display());
         self.files.push(Content::new(
             format!("{}", path.as_ref().display()),
             mime_type,
@@ -388,7 +388,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Render content.opf file
     fn render_opf(&mut self) -> Result<Vec<u8>> {
-        debug!("render_opf...");
+        log::debug!("render_opf...");
         let mut optional: Vec<String> = Vec::new();
         for desc in &self.metadata.description {
             optional.push(format!("<dc:description>{}</dc:description>", desc));
@@ -419,7 +419,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             if content.cover {
                 optional.push("<meta name=\"cover\" content=\"cover-image\"/>".to_string());
             }
-            debug!("id={:?}, mime={:?}", id, content.mime);
+            log::debug!("id={:?}, mime={:?}", id, content.mime);
             items.push(format!(
                 "<item media-type=\"{mime}\" {properties}\
                         id=\"{id}\" href=\"{href}\"/>",
@@ -453,7 +453,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Preface => "preface",
                     Text => "text",
                 };
-                debug!("content = {:?}", &content);
+                log::debug!("content = {:?}", &content);
                 guide.push(format!(
                     "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\"/>",
                     reftype = reftype,
