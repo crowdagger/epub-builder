@@ -33,12 +33,7 @@ use std::io::Write;
 // Try to print Zip file to stdout
 fn run() -> Result<()> {
     // Some dummy content to fill our books
-    let dummy_content = r#"<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
-<body>
-<p>Text of the page</p>
-</body>
-</html>"#;
+    let dummy_content = "Dummy content. This should be valid XHTML if you want a valid EPUB!";
     let dummy_image = "Not really a PNG image";
     let dummy_css = "body { background-color: pink }";
 
