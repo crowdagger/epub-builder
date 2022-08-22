@@ -19,9 +19,7 @@
 //!
 //! # Example
 //!
-//! ```ignore
-//! extern crate epub_builder;
-//!
+//! ```rust
 //! use epub_builder::EpubBuilder;
 //! use epub_builder::Result;
 //! use epub_builder::ZipLibrary;
@@ -29,15 +27,15 @@
 //! use epub_builder::ReferenceType;
 //! use epub_builder::TocElement;
 //!
-//! use std::io;
 //! use std::io::Write;
 //!
-//! // Try to print Zip file to stdout
-//! fn run() -> Result<()> {
+//! fn run() -> Result<Vec<u8>> {
 //!     // Some dummy content to fill our books
 //!     let dummy_content = "Dummy content. This should be valid XHTML if you want a valid EPUB!";
 //!     let dummy_image = "Not really a PNG image";
 //!     let dummy_css = "body { background-color: pink }";
+//!
+//!     let mut output = Vec::<u8>::new();
 //!
 //!     // Create a new EpubBuilder using the zip library
 //!     EpubBuilder::new(ZipLibrary::new()?)?
@@ -74,20 +72,14 @@
 //!         .add_content(EpubContent::new("notes.xhtml", dummy_content.as_bytes()))?
 //!     // Generate a toc inside of the document, that will be part of the linear structure.
 //!         .inline_toc()
-//!     // Finally, write the EPUB file to stdout
-//!         .generate(&mut io::stdout())?;
-//!     Ok(())
+//!     // Finally, write the EPUB file to a writer. It could be a `Vec<u8>`, a file,
+//!     // `stdout` or whatever you like, it just needs to implement the `std::io::Write` trait.
+//!         .generate(&mut output)?;
+//!     Ok(output)
 //! }
 //!
 //! fn main() {
-//!     match run() {
-//!         Ok(_) => {
-//!             writeln!(&mut io::stderr(),
-//!                      "Successfully wrote epub document to stdout!")
-//!                 .unwrap()
-//!         }
-//!         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err).unwrap(),
-//!     };
+//!     let _output = run().expect("Unable to create an epub document");
 //! }
 //! ```
 //!
