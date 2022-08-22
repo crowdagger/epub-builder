@@ -400,7 +400,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             optional.push(format!("<dc:rights>{}</dc:rights>", rights));
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-        let uuid = uuid::adapter::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
+        let uuid = uuid::fmt::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
         let mut items: Vec<String> = Vec::new();
         let mut itemrefs: Vec<String> = Vec::new();
