@@ -2,18 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::errors::Result;
 use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
 use crate::ReferenceType;
-use crate::ResultExt;
 use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
 use std::path::Path;
 
+use eyre::{bail, Context, Result};
 use mustache::MapBuilder;
 
 /// Represents the EPUB version.
@@ -495,7 +494,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
         };
 
-        res.chain_err(|| "could not render template for content.opf")?;
+        res.wrap_err("could not render template for content.opf")?;
 
         Ok(content)
     }
@@ -513,7 +512,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         let mut res: Vec<u8> = vec![];
         templates::TOC_NCX
             .render_data(&mut res, &data)
-            .chain_err(|| "error rendering toc.ncx template")?;
+            .wrap_err("error rendering toc.ncx template")?;
         Ok(res)
     }
 
@@ -580,7 +579,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
         };
 
-        eh.chain_err(|| "error rendering nav.xhtml template")?;
+        eh.wrap_err("error rendering nav.xhtml template")?;
         Ok(res)
     }
 }

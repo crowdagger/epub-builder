@@ -3,8 +3,6 @@
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::zip::Zip;
-use crate::Result;
-use crate::ResultExt;
 
 use std::fmt;
 use std::io;
@@ -13,6 +11,8 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
+use eyre::Context;
+use eyre::Result;
 use libzip::write::FileOptions;
 use libzip::CompressionMethod;
 use libzip::ZipWriter;
@@ -48,10 +48,10 @@ impl ZipLibrary {
                 "mimetype",
                 FileOptions::default().compression_method(CompressionMethod::Stored),
             )
-            .chain_err(|| "could not create mimetype in epub".to_string())?;
+            .wrap_err("could not create mimetype in epub")?;
         writer
             .write(b"application/epub+zip")
-            .chain_err(|| "could not write mimetype in epub".to_string())?;
+            .wrap_err("could not write mimetype in epub")?;
 
         Ok(ZipLibrary { writer })
     }
@@ -67,20 +67,17 @@ impl Zip for ZipLibrary {
         let options = FileOptions::default();
         self.writer
             .start_file(file.clone(), options)
-            .chain_err(|| format!("could not create file '{}' in epub", file))?;
+            .wrap_err_with(|| format!("could not create file '{}' in epub", file))?;
         io::copy(&mut content, &mut self.writer)
-            .chain_err(|| format!("could not write file '{}' in epub", file))?;
+            .wrap_err_with(|| format!("could not write file '{}' in epub", file))?;
         Ok(())
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
-        let cursor = self
-            .writer
-            .finish()
-            .chain_err(|| "error writing zip file")?;
+        let cursor = self.writer.finish().wrap_err("error writing zip file")?;
         let bytes = cursor.into_inner();
         to.write_all(bytes.as_ref())
-            .chain_err(|| "error writing zip file")?;
+            .wrap_err("error writing zip file")?;
         Ok(())
     }
 }

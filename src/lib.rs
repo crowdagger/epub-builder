@@ -139,8 +139,6 @@
 
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
-extern crate error_chain;
 extern crate chrono;
 extern crate html_escape;
 extern crate mustache;
@@ -159,7 +157,6 @@ extern crate log;
 mod common;
 mod epub;
 mod epub_content;
-mod errors;
 mod templates;
 mod toc;
 mod zip;
@@ -175,7 +172,6 @@ pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
 pub use epub_content::EpubContent;
 pub use epub_content::ReferenceType;
-pub use errors::*;
 pub use toc::Toc;
 pub use toc::TocElement;
 #[cfg(feature = "zip-command")]
@@ -185,3 +181,6 @@ pub use zip_command::ZipCommand;
 pub use zip_command_or_library::ZipCommandOrLibrary;
 #[cfg(feature = "zip-library")]
 pub use zip_library::ZipLibrary;
+
+/// Re-exports the result type used across the library.
+pub use eyre::Result;

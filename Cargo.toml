@@ -20,7 +20,7 @@ zip-command = ["tempdir"]
 zip-library = ["zip"]
 
 [dependencies]
-error-chain = "0.12"
+eyre = "0.6.8"
 mustache = "0.9"
 lazy_static = "1"
 chrono = "0.4"
