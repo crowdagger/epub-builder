@@ -1,5 +1,3 @@
-extern crate epub_builder;
-
 use epub_builder::EpubBuilder;
 use epub_builder::EpubContent;
 use epub_builder::ReferenceType;
@@ -11,8 +9,6 @@ use std::env;
 use std::fs::File;
 use std::io;
 use std::io::Write;
-#[macro_use]
-extern crate log;
 
 // Try to print Zip file to stdout
 fn run() -> Result<()> {
@@ -30,7 +26,7 @@ fn run() -> Result<()> {
     // temp file to see epub internals
     let _curr_dir = env::current_dir().unwrap();
     let _out_file = _curr_dir.join("temp_epub_file.epub");
-    debug!("file to write = {}", &_out_file.display());
+    log::debug!("file to write = {}", &_out_file.display());
     let _writer = File::create(_out_file).unwrap();
 
     // Create a new EpubBuilder using the zip library
@@ -81,7 +77,7 @@ fn run() -> Result<()> {
         // Finally, write the EPUB file to stdout
         .generate(&mut io::stdout())?; // generate into stout
                                        // .generate(&_writer)?; // generate into temp file to see epub internals
-    debug!("dummy book generation is done");
+    log::debug!("dummy book generation is done");
     Ok(())
 }
 

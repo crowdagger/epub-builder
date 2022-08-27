@@ -266,7 +266,7 @@ impl Toc {
     pub fn render(&mut self, numbered: bool) -> String {
         let mut output: Vec<String> = Vec::new();
         for elem in &self.elements {
-            debug!("rendered elem: {:?}", &elem.render(numbered));
+            log::debug!("rendered elem: {:?}", &elem.render(numbered));
             output.push(elem.render(numbered));
         }
         common::indent(

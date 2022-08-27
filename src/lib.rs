@@ -19,9 +19,7 @@
 //!
 //! # Example
 //!
-//! ```ignore
-//! extern crate epub_builder;
-//!
+//! ```rust
 //! use epub_builder::EpubBuilder;
 //! use epub_builder::Result;
 //! use epub_builder::ZipLibrary;
@@ -29,15 +27,15 @@
 //! use epub_builder::ReferenceType;
 //! use epub_builder::TocElement;
 //!
-//! use std::io;
 //! use std::io::Write;
 //!
-//! // Try to print Zip file to stdout
-//! fn run() -> Result<()> {
+//! fn run() -> Result<Vec<u8>> {
 //!     // Some dummy content to fill our books
 //!     let dummy_content = "Dummy content. This should be valid XHTML if you want a valid EPUB!";
 //!     let dummy_image = "Not really a PNG image";
 //!     let dummy_css = "body { background-color: pink }";
+//!
+//!     let mut output = Vec::<u8>::new();
 //!
 //!     // Create a new EpubBuilder using the zip library
 //!     EpubBuilder::new(ZipLibrary::new()?)?
@@ -74,20 +72,14 @@
 //!         .add_content(EpubContent::new("notes.xhtml", dummy_content.as_bytes()))?
 //!     // Generate a toc inside of the document, that will be part of the linear structure.
 //!         .inline_toc()
-//!     // Finally, write the EPUB file to stdout
-//!         .generate(&mut io::stdout())?;
-//!     Ok(())
+//!     // Finally, write the EPUB file to a writer. It could be a `Vec<u8>`, a file,
+//!     // `stdout` or whatever you like, it just needs to implement the `std::io::Write` trait.
+//!         .generate(&mut output)?;
+//!     Ok(output)
 //! }
 //!
 //! fn main() {
-//!     match run() {
-//!         Ok(_) => {
-//!             writeln!(&mut io::stderr(),
-//!                      "Successfully wrote epub document to stdout!")
-//!                 .unwrap()
-//!         }
-//!         Err(err) => writeln!(&mut io::stderr(), "Error: {}", err).unwrap(),
-//!     };
+//!     let _output = run().expect("Unable to create an epub document");
 //! }
 //! ```
 //!
@@ -137,29 +129,9 @@
 //! version 2.0](https://www.mozilla.org/en-US/MPL/2.0/).
 #![deny(missing_docs)]
 
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate error_chain;
-extern crate chrono;
-extern crate html_escape;
-extern crate mustache;
-extern crate regex;
-#[cfg(feature = "zip-command")]
-extern crate tempdir;
-extern crate uuid;
-#[cfg(feature = "zip-library")]
-extern crate zip as libzip;
-#[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
-#[macro_use]
-extern crate log;
-
 mod common;
 mod epub;
 mod epub_content;
-mod errors;
 mod templates;
 mod toc;
 mod zip;
@@ -175,7 +147,6 @@ pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
 pub use epub_content::EpubContent;
 pub use epub_content::ReferenceType;
-pub use errors::*;
 pub use toc::Toc;
 pub use toc::TocElement;
 #[cfg(feature = "zip-command")]
@@ -185,3 +156,6 @@ pub use zip_command::ZipCommand;
 pub use zip_command_or_library::ZipCommandOrLibrary;
 #[cfg(feature = "zip-library")]
 pub use zip_library::ZipLibrary;
+
+/// Re-exports the result type used across the library.
+pub use eyre::Result;

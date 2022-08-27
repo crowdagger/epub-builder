@@ -2,11 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::errors::Result;
-
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
+
+use eyre::Result;
 
 /// An abstraction over possible Zip implementations.
 ///

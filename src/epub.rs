@@ -2,25 +2,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::errors::Result;
 use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
 use crate::ReferenceType;
-use crate::ResultExt;
 use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
 use std::path::Path;
 
+use eyre::{bail, Context, Result};
 use mustache::MapBuilder;
 
 /// Represents the EPUB version.
 ///
 /// Currently, this library supports EPUB 2.0.1 and 3.0.1.
 #[non_exhaustive]
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
 pub enum EpubVersion {
     /// EPUB 2.0.1 format
     V20,
@@ -262,7 +261,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     {
         self.zip
             .write_file(Path::new("OEBPS").join(path.as_ref()), content)?;
-        debug!("Add resource: {:?}", path.as_ref().display());
+        log::debug!("Add resource: {:?}", path.as_ref().display());
         self.files.push(Content::new(
             format!("{}", path.as_ref().display()),
             mime_type,
@@ -389,7 +388,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Render content.opf file
     fn render_opf(&mut self) -> Result<Vec<u8>> {
-        debug!("render_opf...");
+        log::debug!("render_opf...");
         let mut optional: Vec<String> = Vec::new();
         for desc in &self.metadata.description {
             optional.push(format!("<dc:description>{}</dc:description>", desc));
@@ -401,7 +400,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             optional.push(format!("<dc:rights>{}</dc:rights>", rights));
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-        let uuid = uuid::adapter::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
+        let uuid = uuid::fmt::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
         let mut items: Vec<String> = Vec::new();
         let mut itemrefs: Vec<String> = Vec::new();
@@ -420,7 +419,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             if content.cover {
                 optional.push("<meta name=\"cover\" content=\"cover-image\"/>".to_string());
             }
-            debug!("id={:?}, mime={:?}", id, content.mime);
+            log::debug!("id={:?}, mime={:?}", id, content.mime);
             items.push(format!(
                 "<item media-type=\"{mime}\" {properties}\
                         id=\"{id}\" href=\"{href}\"/>",
@@ -428,7 +427,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 mime = content.mime,
                 id = id,
                 // in the zip the path is always with forward slashes, on windows it is with backslashes
-                href = content.file.replace("\\", "/")
+                href = content.file.replace('\\', "/")
             ));
             if content.itemref {
                 itemrefs.push(format!("<itemref idref=\"{id}\"/>", id = id));
@@ -454,7 +453,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     Preface => "preface",
                     Text => "text",
                 };
-                debug!("content = {:?}", &content);
+                log::debug!("content = {:?}", &content);
                 guide.push(format!(
                     "<reference type=\"{reftype}\" title=\"{title}\" href=\"{href}\"/>",
                     reftype = reftype,
@@ -495,7 +494,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
         };
 
-        res.chain_err(|| "could not render template for content.opf")?;
+        res.wrap_err("could not render template for content.opf")?;
 
         Ok(content)
     }
@@ -513,7 +512,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         let mut res: Vec<u8> = vec![];
         templates::TOC_NCX
             .render_data(&mut res, &data)
-            .chain_err(|| "error rendering toc.ncx template")?;
+            .wrap_err("error rendering toc.ncx template")?;
         Ok(res)
     }
 
@@ -580,7 +579,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
         };
 
-        eh.chain_err(|| "error rendering nav.xhtml template")?;
+        eh.wrap_err("error rendering nav.xhtml template")?;
         Ok(res)
     }
 }
@@ -589,28 +588,27 @@ impl<Z: Zip> EpubBuilder<Z> {
 // Ordering to to look as similar as possible to the W3 Recommendation ruleset
 // Slightly more permissive, there are some that are invalid start chars, but this is ok.
 fn is_id_char(c: char) -> bool {
-    false
-        || { c >= 'A' && c <= 'Z' }
-        || { c == '_' }
-        || { c >= 'a' && c <= 'z' }
-        || { c >= '\u{C0}' && c <= '\u{D6}' }
-        || { c >= '\u{D8}' && c <= '\u{F6}' }
-        || { c >= '\u{F8}' && c <= '\u{2FF}' }
-        || { c >= '\u{370}' && c <= '\u{37D}' }
-        || { c >= '\u{37F}' && c <= '\u{1FFF}' }
-        || { c >= '\u{200C}' && c <= '\u{200D}' }
-        || { c >= '\u{2070}' && c <= '\u{218F}' }
-        || { c >= '\u{2C00}' && c <= '\u{2FEF}' }
-        || { c >= '\u{3001}' && c <= '\u{D7FF}' }
-        || { c >= '\u{F900}' && c <= '\u{FDCF}' }
-        || { c >= '\u{FDF0}' && c <= '\u{FFFD}' }
-        || { c >= '\u{10000}' && c <= '\u{EFFFF}' }
-        || { c == '-' }
-        || { c == '.' }
-        || { c >= '0' && c <= '9' }
-        || { c == '\u{B7}' }
-        || { c >= '\u{0300}' && c <= '\u{036F}' }
-        || { c >= '\u{203F}' && c <= '\u{2040}' }
+    ('A'..='Z').contains(&c)
+        || c == '_'
+        || ('a'..='z').contains(&c)
+        || ('\u{C0}'..='\u{D6}').contains(&c)
+        || ('\u{D8}'..='\u{F6}').contains(&c)
+        || ('\u{F8}'..='\u{2FF}').contains(&c)
+        || ('\u{370}'..='\u{37D}').contains(&c)
+        || ('\u{37F}'..='\u{1FFF}').contains(&c)
+        || ('\u{200C}'..='\u{200D}').contains(&c)
+        || ('\u{2070}'..='\u{218F}').contains(&c)
+        || ('\u{2C00}'..='\u{2FEF}').contains(&c)
+        || ('\u{3001}'..='\u{D7FF}').contains(&c)
+        || ('\u{F900}'..='\u{FDCF}').contains(&c)
+        || ('\u{FDF0}'..='\u{FFFD}').contains(&c)
+        || ('\u{10000}'..='\u{EFFFF}').contains(&c)
+        || c == '-'
+        || c == '.'
+        || ('0'..='9').contains(&c)
+        || c == '\u{B7}'
+        || ('\u{0300}'..='\u{036F}').contains(&c)
+        || ('\u{203F}'..='\u{2040}').contains(&c)
 }
 
 // generate an id compatible string, replacing all none ID chars to underscores
