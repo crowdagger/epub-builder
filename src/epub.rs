@@ -484,12 +484,15 @@ impl<Z: Zip> EpubBuilder<Z> {
                         builder = builder.push_map(|builder| {
                             builder
                                 .insert_str("id".to_string(), i.to_string())
-                                .insert_str("name".to_string(), author)
+                                .insert_str("name".to_string(), html_escape::encode_text(author))
                         });
                     }
                     builder
                 })
-                .insert_str("title", self.metadata.title.as_str())
+                .insert_str(
+                    "title",
+                    html_escape::encode_text(self.metadata.title.as_str()),
+                )
                 .insert_str("generator", self.metadata.generator.as_str())
                 .insert_str("toc_name", self.metadata.toc_name.as_str())
                 .insert_str("optional", common::indent(optional.join("\n"), 2))
@@ -504,7 +507,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             } else {
                 builder = builder.insert_bool("date_published", false);
             }
-                
+
             builder.build()
         };
 
