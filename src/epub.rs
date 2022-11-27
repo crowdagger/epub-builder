@@ -38,6 +38,7 @@ struct Metadata {
     pub description: Vec<String>,
     pub subject: Vec<String>,
     pub license: Option<String>,
+    pub date_published: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl Metadata {
@@ -52,6 +53,7 @@ impl Metadata {
             description: vec![],
             subject: vec![],
             license: None,
+            date_published: None,
         }
     }
 }
@@ -203,6 +205,14 @@ impl<Z: Zip> EpubBuilder<Z> {
             s => bail!("invalid metadata '{}'", s),
         }
         Ok(self)
+    }
+
+    /// Sets the publication date of the EPUB
+    /// 
+    /// This value is part of the metadata. If this function is not called, the time at the
+    /// moment of generation will be used instead.
+    pub fn set_publication_date(&mut self, date_published: chrono::DateTime<chrono::Utc>) {
+        self.metadata.date_published = Some(date_published);
     }
 
     /// Sets stylesheet of the EPUB.
@@ -400,6 +410,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             optional.push(format!("<dc:rights>{}</dc:rights>", rights));
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
+        let date_published = self.metadata.date_published.map(|date| date.format("%Y-%m-%dT%H:%M:%SZ"));
         let uuid = uuid::fmt::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
         let mut items: Vec<String> = Vec::new();
@@ -464,29 +475,38 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
         }
 
-        let data = MapBuilder::new()
-            .insert_str("lang", self.metadata.lang.as_str())
-            .insert_vec("author", |builder| {
-                let mut builder = builder;
-                for (i, author) in self.metadata.author.iter().enumerate() {
-                    builder = builder.push_map(|builder| {
-                        builder
-                            .insert_str("id".to_string(), i.to_string())
-                            .insert_str("name".to_string(), author)
-                    });
-                }
-                builder
-            })
-            .insert_str("title", self.metadata.title.as_str())
-            .insert_str("generator", self.metadata.generator.as_str())
-            .insert_str("toc_name", self.metadata.toc_name.as_str())
-            .insert_str("optional", common::indent(optional.join("\n"), 2))
-            .insert_str("items", common::indent(items.join("\n"), 2))
-            .insert_str("itemrefs", common::indent(itemrefs.join("\n"), 2))
-            .insert_str("date", date.to_string())
-            .insert_str("uuid", uuid)
-            .insert_str("guide", common::indent(guide.join("\n"), 2))
-            .build();
+        let data = {
+            let mut builder = MapBuilder::new()
+                .insert_str("lang", self.metadata.lang.as_str())
+                .insert_vec("author", |builder| {
+                    let mut builder = builder;
+                    for (i, author) in self.metadata.author.iter().enumerate() {
+                        builder = builder.push_map(|builder| {
+                            builder
+                                .insert_str("id".to_string(), i.to_string())
+                                .insert_str("name".to_string(), author)
+                        });
+                    }
+                    builder
+                })
+                .insert_str("title", self.metadata.title.as_str())
+                .insert_str("generator", self.metadata.generator.as_str())
+                .insert_str("toc_name", self.metadata.toc_name.as_str())
+                .insert_str("optional", common::indent(optional.join("\n"), 2))
+                .insert_str("items", common::indent(items.join("\n"), 2))
+                .insert_str("itemrefs", common::indent(itemrefs.join("\n"), 2))
+                .insert_str("date", date.to_string())
+                .insert_str("uuid", uuid)
+                .insert_str("guide", common::indent(guide.join("\n"), 2));
+
+            if let Some(date) = date_published {
+                builder = builder.insert_str("date_published", date.to_string());
+            } else {
+                builder = builder.insert_bool("date_published", false);
+            }
+                
+            builder.build()
+        };
 
         let mut content = vec![];
         let res = match self.version {

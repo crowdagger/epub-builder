@@ -4,7 +4,9 @@
             xmlns:opf="http://www.idpf.org/2007/opf">
     <dc:identifier id="epub-id-1">{{uuid}}</dc:identifier>
     <dc:title>{{{title}}}</dc:title>
-    <dc:date>{{{date}}}</dc:date>
+    {{#date_published}}
+    <dc:date>{{{date_published}}}</dc:date>
+    {{/date_published}}
     <dc:language>{{{lang}}}</dc:language>
     {{#author}}
     <dc:creator opf:role="aut">{{{name}}}</dc:creator>
