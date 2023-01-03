@@ -206,9 +206,19 @@ impl<Z: Zip> EpubBuilder<Z> {
         Ok(self)
     }
 
+    /// Sets the authors of the EPUB
+    pub fn set_authors(&mut self, value: Vec<String>) {
+        self.metadata.author = value;
+    }
+
     /// Add an author to the EPUB
     pub fn add_author<S: Into<String>>(&mut self, value: S) {
         self.metadata.author.push(value.into());
+    }
+
+    /// Remove all authors from EPUB
+    pub fn clear_authors<S: Into<String>>(&mut self) {
+        self.metadata.author.clear()
     }
 
     /// Sets the title of the EPUB
@@ -250,7 +260,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Sets and replaces the subjects of the EPUB
-    pub fn set_subject(&mut self, value: Vec<String>) {
+    pub fn set_subjects(&mut self, value: Vec<String>) {
         self.metadata.subject = value;
     }
 
@@ -260,7 +270,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Remove all the subjects from EPUB
-    pub fn clear_subject(&mut self) {
+    pub fn clear_subjects(&mut self) {
         self.metadata.subject.clear();
     }
 
