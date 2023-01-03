@@ -265,8 +265,8 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Sets the license under which this EPUB is distributed
-    pub fn set_license(&mut self, value: String) {
-        self.metadata.license = Some(value);
+    pub fn set_license<S: Into<String>>(&mut self, value: S) {
+        self.metadata.license = Some(value.into());
     }
 
     /// Sets the publication date of the EPUB
