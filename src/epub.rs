@@ -41,13 +41,6 @@ pub struct Metadata {
     pub date_published: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl Metadata {
-    /// Create new default metadata
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
 impl Default for Metadata {
     fn default() -> Self {
         Self {
@@ -115,8 +108,7 @@ pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
     zip: Z,
     files: Vec<Content>,
-    /// Epub Metadata
-    pub metadata: Metadata,
+    metadata: Metadata,
     toc: Toc,
     stylesheet: bool,
     inline_toc: bool,
@@ -129,7 +121,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             version: EpubVersion::V20,
             zip,
             files: vec![],
-            metadata: Metadata::new(),
+            metadata: Metadata::default(),
             toc: Toc::new(),
             stylesheet: false,
             inline_toc: false,
@@ -212,6 +204,69 @@ impl<Z: Zip> EpubBuilder<Z> {
             s => bail!("invalid metadata '{}'", s),
         }
         Ok(self)
+    }
+
+    /// Add an author to the EPUB
+    pub fn add_author<S: Into<String>>(&mut self, value: S) {
+        self.metadata.author.push(value.into());
+    }
+
+    /// Sets the title of the EPUB
+    ///
+    /// This is quite important as EPUB renderers rely on it
+    /// for e.g. hyphenating words.
+    pub fn set_title<S: Into<String>>(&mut self, value: S) {
+        self.metadata.title = value.into();
+    }
+
+    /// Sets the language of the EPUB
+    pub fn set_lang<S: Into<String>>(&mut self, value: S) {
+        self.metadata.lang = value.into();
+    }
+
+    /// Sets the generator of the book (should be your program name)
+    pub fn set_generator<S: Into<String>>(&mut self, value: S) {
+        self.metadata.generator = value.into();
+    }
+
+    /// Sets the name to use for table of contents. This is by default, "Table of Contents"
+    pub fn set_toc_name<S: Into<String>>(&mut self, value: S) {
+        self.metadata.toc_name = value.into();
+    }
+
+    /// Sets and replaces the description of the EPUB
+    pub fn set_description(&mut self, value: Vec<String>) {
+        self.metadata.description = value;
+    }
+
+    /// Adds a line to the EPUB description
+    pub fn add_description<S: Into<String>>(&mut self, value: S) {
+        self.metadata.description.push(value.into());
+    }
+
+    /// Remove all description paragraphs from EPUB
+    pub fn clear_description(&mut self) {
+        self.metadata.description.clear();
+    }
+
+    /// Sets and replaces the subjects of the EPUB
+    pub fn set_subject(&mut self, value: Vec<String>) {
+        self.metadata.subject = value;
+    }
+
+    /// Adds a value to the subjects
+    pub fn add_subject<S: Into<String>>(&mut self, value: S) {
+        self.metadata.subject.push(value.into());
+    }
+
+    /// Remove all the subjects from EPUB
+    pub fn clear_subject(&mut self) {
+        self.metadata.subject.clear();
+    }
+
+    /// Sets the license under which this EPUB is distributed
+    pub fn set_license(&mut self, value: String) {
+        self.metadata.license = Some(value);
     }
 
     /// Sets the publication date of the EPUB

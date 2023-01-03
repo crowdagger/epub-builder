@@ -33,8 +33,8 @@ fn run() -> Result<()> {
     let mut builder = EpubBuilder::new(ZipLibrary::new()?)?;
 
     // Set some metadata
-    builder.metadata.author.push(String::from("Joan Doe"));
-    builder.metadata.title = String::from("Dummy Book <T>");
+    builder.add_author("Joan Doe");
+    builder.set_title("Dummy Book <T>");
 
     // Set the stylesheet (create a "stylesheet.css" file in EPUB that is used by some generated files)
     builder.stylesheet(dummy_css.as_bytes())?;
