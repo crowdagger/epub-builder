@@ -33,4 +33,10 @@ log = "0.4"
 
 [dev-dependencies]
 pretty_assertions = "1"
-env_logger = "0.9"
+env_logger = "0.10.0"
+
+[[example]]
+name = "builder"
+
+[[example]]
+name = "procedural"

@@ -29,7 +29,7 @@ pub enum EpubVersion {
 
 /// EPUB Metadata
 #[derive(Debug)]
-struct Metadata {
+pub struct Metadata {
     pub title: String,
     pub author: Vec<String>,
     pub lang: String,
@@ -43,8 +43,14 @@ struct Metadata {
 
 impl Metadata {
     /// Create new default metadata
-    pub fn new() -> Metadata {
-        Metadata {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
             title: String::new(),
             author: vec![],
             lang: String::from("en"),
@@ -109,7 +115,8 @@ pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
     zip: Z,
     files: Vec<Content>,
-    metadata: Metadata,
+    /// Epub Metadata
+    pub metadata: Metadata,
     toc: Toc,
     stylesheet: bool,
     inline_toc: bool,
@@ -208,7 +215,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Sets the publication date of the EPUB
-    /// 
+    ///
     /// This value is part of the metadata. If this function is not called, the time at the
     /// moment of generation will be used instead.
     pub fn set_publication_date(&mut self, date_published: chrono::DateTime<chrono::Utc>) {
@@ -410,7 +417,10 @@ impl<Z: Zip> EpubBuilder<Z> {
             optional.push(format!("<dc:rights>{}</dc:rights>", rights));
         }
         let date = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ");
-        let date_published = self.metadata.date_published.map(|date| date.format("%Y-%m-%dT%H:%M:%SZ"));
+        let date_published = self
+            .metadata
+            .date_published
+            .map(|date| date.format("%Y-%m-%dT%H:%M:%SZ"));
         let uuid = uuid::fmt::Urn::from_uuid(uuid::Uuid::new_v4()).to_string();
 
         let mut items: Vec<String> = Vec::new();
@@ -504,7 +514,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             } else {
                 builder = builder.insert_bool("date_published", false);
             }
-                
+
             builder.build()
         };
 
