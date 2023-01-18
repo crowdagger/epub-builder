@@ -481,15 +481,16 @@ impl<Z: Zip> EpubBuilder<Z> {
                 .insert_vec("author", |builder| {
                     let mut builder = builder;
                     for (i, author) in self.metadata.author.iter().enumerate() {
+                        let author_escaped = html_escape::encode_text(author);
                         builder = builder.push_map(|builder| {
                             builder
                                 .insert_str("id".to_string(), i.to_string())
-                                .insert_str("name".to_string(), author)
+                                .insert_str("name".to_string(), author_escaped.to_string())
                         });
                     }
                     builder
                 })
-                .insert_str("title", self.metadata.title.as_str())
+                .insert_str("title", html_escape::encode_text(self.metadata.title.as_str()))
                 .insert_str("generator", self.metadata.generator.as_str())
                 .insert_str("toc_name", self.metadata.toc_name.as_str())
                 .insert_str("optional", common::indent(optional.join("\n"), 2))
