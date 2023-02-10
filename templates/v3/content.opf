@@ -12,7 +12,7 @@
     <dc:creator id="epub-creator-{{{id}}}">{{{name}}}</dc:creator>
     <meta refines="#epub-creator-{{{id}}}" property="role" scheme="marc:relators">aut</meta>
     {{/author}}
-    <meta property="dcterms:modified">{{{date}}}</meta>
+    <meta property="dcterms:modified">{{{date_modified}}}</meta>
 {{{optional}}}
   </metadata>
   <manifest>

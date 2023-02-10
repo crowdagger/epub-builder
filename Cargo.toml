@@ -17,7 +17,8 @@ path = "src/lib.rs"
 [features]
 default = ["zip-command", "zip-library"]
 zip-command = ["tempdir"]
-zip-library = ["libzip"]
+# Enable `libzip` directly to avoid non-reproducible timestamps in the zip file.
+zip-library = ["libzip", "libzip/time"]
 
 [dependencies]
 eyre = "0.6.8"
@@ -26,7 +27,7 @@ once_cell = "1.13.1"
 chrono = "0.4"
 uuid = { version = "1", features = ["v4"] }
 tempdir = { version = "0.3", optional = true } 
-libzip = { version = "0.6", optional = true, default-features = false, features = ["time", "deflate"], package = "zip"} 
+libzip = { version = "0.6", optional = true, default-features = false, features = ["deflate"], package = "zip"} 
 regex = "1"
 html-escape = "0.2.6"
 log = "0.4"
