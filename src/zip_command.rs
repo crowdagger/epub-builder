@@ -93,7 +93,7 @@ impl ZipCommand {
             // dir does not exist, create it
             DirBuilder::new()
                 .recursive(true)
-                .create(&dest_dir)
+                .create(dest_dir)
                 .wrap_err_with(|| {
                     format!(
                         "could not create temporary directory in {path}",
