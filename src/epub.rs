@@ -27,12 +27,58 @@ pub enum EpubVersion {
     V30,
 }
 
+/// The page-progression-direction attribute of spine is a global attribute and
+/// therefore defines the pagination flow of the book as a whole.
+#[derive(Debug, Copy, Clone, Default)]
+pub enum PageDirection {
+    /// Left to right
+    #[default]
+    Ltr,
+    /// Right to left
+    Rtl,
+}
+
+impl ToString for PageDirection {
+    fn to_string(&self) -> String {
+        match &self {
+            PageDirection::Rtl => "rtl".into(),
+            PageDirection::Ltr => "ltr".into(),
+        }
+    }
+}
+
+impl<'a> From<&'a str> for PageDirection {
+    fn from(value: &'a str) -> Self {
+        value.parse().unwrap_or(PageDirection::default())
+    }
+}
+
+impl From<String> for PageDirection {
+    fn from(value: String) -> Self {
+        value.parse().unwrap_or(PageDirection::default())
+    }
+}
+
+impl std::str::FromStr for PageDirection {
+    type Err = ();
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let s = s.to_lowercase();
+        match s.as_ref() {
+            "rtl" => Ok(PageDirection::Rtl),
+            "ltr" => Ok(PageDirection::Ltr),
+            _ => Err(()),
+        }
+    }
+}
+
 /// EPUB Metadata
 #[derive(Debug)]
 struct Metadata {
     pub title: String,
     pub author: Vec<String>,
     pub lang: String,
+    pub direction: PageDirection,
     pub generator: String,
     pub toc_name: String,
     pub description: Vec<String>,
@@ -50,6 +96,7 @@ impl Metadata {
             title: String::new(),
             author: vec![],
             lang: String::from("en"),
+            direction: PageDirection::default(),
             generator: String::from("Rust EPUB library"),
             toc_name: String::from("Table Of Contents"),
             description: vec![],
@@ -187,6 +234,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
+            "direction" => self.metadata.direction = value.into().into(),
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
@@ -511,6 +559,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     }
                     builder
                 })
+                .insert_str("direction", self.metadata.direction.to_string())
                 .insert_str("title", self.metadata.title.as_str())
                 .insert_str("generator", self.metadata.generator.as_str())
                 .insert_str("toc_name", self.metadata.toc_name.as_str())
