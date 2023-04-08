@@ -47,15 +47,9 @@ impl ToString for PageDirection {
     }
 }
 
-impl<'a> From<&'a str> for PageDirection {
-    fn from(value: &'a str) -> Self {
-        value.parse().unwrap_or(PageDirection::default())
-    }
-}
-
 impl From<String> for PageDirection {
     fn from(value: String) -> Self {
-        value.parse().unwrap_or(PageDirection::default())
+        value.parse().unwrap()
     }
 }
 
