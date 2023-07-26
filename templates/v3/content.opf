@@ -9,8 +9,8 @@
     {{/date_published}}
     <dc:language>{{{lang}}}</dc:language>
     {{#author}}
-    <dc:creator id="epub-creator-{{{id}}}">{{{name}}}</dc:creator>
-    <meta refines="#epub-creator-{{{id}}}" property="role" scheme="marc:relators">aut</meta>
+    <dc:creator id="epub-creator-{{{id_attr}}}">{{{name}}}</dc:creator>
+    <meta refines="#epub-creator-{{{id_attr}}}" property="role" scheme="marc:relators">aut</meta>
     {{/author}}
     <meta property="dcterms:modified">{{{date_modified}}}</meta>
 {{{optional}}}
@@ -24,7 +24,7 @@
 {{{itemrefs}}}
   </spine>
   <guide>
-    <reference type="toc" title="{{{toc_name}}}" href="nav.xhtml"/>
+    <reference type="toc" title="{{{toc_name_attr}}}" href="nav.xhtml"/>
 {{{guide}}}
   </guide>
 </package>
