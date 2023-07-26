@@ -2,24 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use once_cell::sync::Lazy;
-use regex::Regex;
-
-use std::borrow::Cow;
-
-/// Escape quotes from the string
-pub fn escape_quote<'a, S: Into<Cow<'a, str>>>(s: S) -> Cow<'a, str> {
-    static REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"""#).expect("This is a valid regexp"));
-
-    let s = s.into();
-    if REGEX.is_match(&s) {
-        let res = REGEX.replace_all(&s, "&quot;").into_owned();
-        Cow::Owned(res)
-    } else {
-        s
-    }
-}
-
 /// Indent lines of the string
 pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
     s.as_ref()
@@ -33,16 +15,6 @@ pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
         })
         .collect::<Vec<String>>()
         .join("\n")
-}
-
-#[test]
-#[allow(clippy::blacklisted_name)]
-fn test_escape() {
-    let foo = "Some string with \"quote\"";
-    assert_eq!(&escape_quote(foo), "Some string with &quot;quote&quot;");
-
-    let bar = "Some string without quote";
-    assert_eq!(&escape_quote(bar), bar);
 }
 
 #[test]

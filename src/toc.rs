@@ -114,7 +114,6 @@ impl TocElement {
             format!("\n{}", common::indent(output.join("\n"), 1))
         };
         // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
-        let escaped_title = html_escape::encode_text(&self.title);
         (
             offset,
             format!(
@@ -125,10 +124,10 @@ impl TocElement {
   </navLabel>
   <content src=\"{url}\"/>{children}
 </navPoint>",
-                id = id,
-                title = escaped_title.trim(),
-                url = self.url,
-                children = children
+                id = html_escape::encode_double_quoted_attribute(&id.to_string()),
+                title = html_escape::encode_text(&self.title).trim(),
+                url = html_escape::encode_double_quoted_attribute(&self.url),
+                children = children, // Not escaped: XML content
             ),
         )
     }
@@ -140,11 +139,10 @@ impl TocElement {
             return String::new();
         }
         if self.children.is_empty() {
-            let escaped_title = html_escape::encode_text(&self.title);
             format!(
                 "<li><a href=\"{link}\">{title}</a></li>",
-                link = self.url,
-                title = escaped_title,
+                link = html_escape::encode_double_quoted_attribute(&self.url),
+                title = html_escape::encode_text(&self.title),
             )
         } else {
             let mut output: Vec<String> = Vec::new();
@@ -153,8 +151,8 @@ impl TocElement {
             }
             let children = format!(
                 "<{oul}>\n{children}\n</{oul}>",
-                oul = if numbered { "ol" } else { "ul" },
-                children = common::indent(output.join("\n"), 1)
+                oul = if numbered { "ol" } else { "ul" }, // Not escaped: Static string
+                children = common::indent(output.join("\n"), 1), // Not escaped: XML content
             );
             format!(
                 "\
@@ -162,10 +160,9 @@ impl TocElement {
   <a href=\"{link}\">{title}</a>
 {children}
 </li>",
-                link = self.url,
-                // escape < > symbols by &lt; &gt; using 'encode_text()' in link's Title
+                link = html_escape::encode_double_quoted_attribute(&self.url),
                 title = html_escape::encode_text(&self.title),
-                children = common::indent(children, 1)
+                children = common::indent(children, 1), // Not escaped: XML content
             )
         }
     }
@@ -272,8 +269,8 @@ impl Toc {
         common::indent(
             format!(
                 "<{oul}>\n{output}\n</{oul}>",
-                output = common::indent(output.join("\n"), 1),
-                oul = if numbered { "ol" } else { "ul" }
+                output = common::indent(output.join("\n"), 1), // Not escaped: XML content
+                oul = if numbered { "ol" } else { "ul" } // Not escaped: Static string
             ),
             2,
         )

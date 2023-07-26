@@ -138,9 +138,9 @@ mod zip;
 #[cfg(feature = "zip-command")]
 mod zip_command;
 #[cfg(feature = "zip-command")]
-#[cfg(feature = "zip-library")]
+#[cfg(feature = "libzip")]
 mod zip_command_or_library;
-#[cfg(feature = "zip-library")]
+#[cfg(feature = "libzip")]
 mod zip_library;
 
 pub use epub::EpubBuilder;
@@ -152,9 +152,9 @@ pub use toc::TocElement;
 #[cfg(feature = "zip-command")]
 pub use zip_command::ZipCommand;
 #[cfg(feature = "zip-command")]
-#[cfg(feature = "zip-library")]
+#[cfg(feature = "libzip")]
 pub use zip_command_or_library::ZipCommandOrLibrary;
-#[cfg(feature = "zip-library")]
+#[cfg(feature = "libzip")]
 pub use zip_library::ZipLibrary;
 
 /// Re-exports the result type used across the library.
