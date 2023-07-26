@@ -1,5 +1,19 @@
 ChangeLog
 ==========
+
+0.6.0 (???)
+===========
+* Fix all non-valid characters in IDs (thebaron88)
+* Fix multi-author tags (quartzlibrary)
+* Escape nav.xhtml (thebaron88)
+* Replace error-chain with eyre (mexus)
+* Add deflate compression to zip (dgel)
+* Add type-safe methods to modify metadata (Mensch)
+* Make libzip/time feature optional (QuartzLibrary)
+* Escape external contents (jtojnar)
+* Add an exemple (ultrasaurus)
+* Add page direction (erasin, jtojnar)
+
 0.5.0 (2022-01-26)
 =====================
 * Move to Rust 2021 edition
