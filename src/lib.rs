@@ -145,6 +145,7 @@ mod zip_library;
 
 pub use epub::EpubBuilder;
 pub use epub::EpubVersion;
+pub use epub::PageDirection;
 pub use epub_content::EpubContent;
 pub use epub_content::ReferenceType;
 pub use toc::Toc;
