@@ -29,7 +29,7 @@ pub enum EpubVersion {
 
 /// EPUB Metadata
 #[derive(Debug)]
-struct Metadata {
+pub struct Metadata {
     pub title: String,
     pub author: Vec<String>,
     pub lang: String,
@@ -43,10 +43,9 @@ struct Metadata {
     pub uuid: Option<uuid::Uuid>,
 }
 
-impl Metadata {
-    /// Create new default metadata
-    pub fn new() -> Metadata {
-        Metadata {
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
             title: String::new(),
             author: vec![],
             lang: String::from("en"),
@@ -126,7 +125,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             version: EpubVersion::V20,
             zip,
             files: vec![],
-            metadata: Metadata::new(),
+            metadata: Metadata::default(),
             toc: Toc::new(),
             stylesheet: false,
             inline_toc: false,
@@ -209,6 +208,79 @@ impl<Z: Zip> EpubBuilder<Z> {
             s => bail!("invalid metadata '{}'", s),
         }
         Ok(self)
+    }
+
+    /// Sets the authors of the EPUB
+    pub fn set_authors(&mut self, value: Vec<String>) {
+        self.metadata.author = value;
+    }
+
+    /// Add an author to the EPUB
+    pub fn add_author<S: Into<String>>(&mut self, value: S) {
+        self.metadata.author.push(value.into());
+    }
+
+    /// Remove all authors from EPUB
+    pub fn clear_authors<S: Into<String>>(&mut self) {
+        self.metadata.author.clear()
+    }
+
+    /// Sets the title of the EPUB
+    ///
+    /// This is quite important as EPUB renderers rely on it
+    /// for e.g. hyphenating words.
+    pub fn set_title<S: Into<String>>(&mut self, value: S) {
+        self.metadata.title = value.into();
+    }
+
+    /// Sets the language of the EPUB
+    pub fn set_lang<S: Into<String>>(&mut self, value: S) {
+        self.metadata.lang = value.into();
+    }
+
+    /// Sets the generator of the book (should be your program name)
+    pub fn set_generator<S: Into<String>>(&mut self, value: S) {
+        self.metadata.generator = value.into();
+    }
+
+    /// Sets the name to use for table of contents. This is by default, "Table of Contents"
+    pub fn set_toc_name<S: Into<String>>(&mut self, value: S) {
+        self.metadata.toc_name = value.into();
+    }
+
+    /// Sets and replaces the description of the EPUB
+    pub fn set_description(&mut self, value: Vec<String>) {
+        self.metadata.description = value;
+    }
+
+    /// Adds a line to the EPUB description
+    pub fn add_description<S: Into<String>>(&mut self, value: S) {
+        self.metadata.description.push(value.into());
+    }
+
+    /// Remove all description paragraphs from EPUB
+    pub fn clear_description(&mut self) {
+        self.metadata.description.clear();
+    }
+
+    /// Sets and replaces the subjects of the EPUB
+    pub fn set_subjects(&mut self, value: Vec<String>) {
+        self.metadata.subject = value;
+    }
+
+    /// Adds a value to the subjects
+    pub fn add_subject<S: Into<String>>(&mut self, value: S) {
+        self.metadata.subject.push(value.into());
+    }
+
+    /// Remove all the subjects from EPUB
+    pub fn clear_subjects(&mut self) {
+        self.metadata.subject.clear();
+    }
+
+    /// Sets the license under which this EPUB is distributed
+    pub fn set_license<S: Into<String>>(&mut self, value: S) {
+        self.metadata.license = Some(value.into());
     }
 
     /// Sets the publication date of the EPUB
@@ -469,7 +541,8 @@ impl<Z: Zip> EpubBuilder<Z> {
                 mime = html_escape::encode_double_quoted_attribute(&content.mime),
                 id = html_escape::encode_double_quoted_attribute(&id),
                 // in the zip the path is always with forward slashes, on windows it is with backslashes
-                href = html_escape::encode_double_quoted_attribute(&content.file.replace('\\', "/")),
+                href =
+                    html_escape::encode_double_quoted_attribute(&content.file.replace('\\', "/")),
             ));
             if content.itemref {
                 itemrefs.push(format!(
@@ -516,25 +589,43 @@ impl<Z: Zip> EpubBuilder<Z> {
                     for (i, author) in self.metadata.author.iter().enumerate() {
                         builder = builder.push_map(|builder| {
                             builder
-                                .insert_str("id_attr".to_string(), html_escape::encode_double_quoted_attribute(&i.to_string()))
+                                .insert_str(
+                                    "id_attr".to_string(),
+                                    html_escape::encode_double_quoted_attribute(&i.to_string()),
+                                )
                                 .insert_str("name".to_string(), html_escape::encode_text(author))
                         });
                     }
                     builder
                 })
                 .insert_str("title", html_escape::encode_text(&self.metadata.title))
-                .insert_str("generator_attr", html_escape::encode_double_quoted_attribute(&self.metadata.generator))
-                .insert_str("toc_name", html_escape::encode_text(&self.metadata.toc_name))
-                .insert_str("toc_name_attr", html_escape::encode_double_quoted_attribute(&self.metadata.toc_name))
+                .insert_str(
+                    "generator_attr",
+                    html_escape::encode_double_quoted_attribute(&self.metadata.generator),
+                )
+                .insert_str(
+                    "toc_name",
+                    html_escape::encode_text(&self.metadata.toc_name),
+                )
+                .insert_str(
+                    "toc_name_attr",
+                    html_escape::encode_double_quoted_attribute(&self.metadata.toc_name),
+                )
                 .insert_str("optional", common::indent(optional.join("\n"), 2)) // Not escaped: XML content
                 .insert_str("items", common::indent(items.join("\n"), 2)) // Not escaped: XML content
                 .insert_str("itemrefs", common::indent(itemrefs.join("\n"), 2)) // Not escaped: XML content
-                .insert_str("date_modified", html_escape::encode_text(&date_modified.to_string()))
+                .insert_str(
+                    "date_modified",
+                    html_escape::encode_text(&date_modified.to_string()),
+                )
                 .insert_str("uuid", html_escape::encode_text(&uuid))
                 .insert_str("guide", common::indent(guide.join("\n"), 2)); // Not escaped: XML content
 
             if let Some(date) = date_published {
-                builder = builder.insert_str("date_published", html_escape::encode_text(&date.to_string()));
+                builder = builder.insert_str(
+                    "date_published",
+                    html_escape::encode_text(&date.to_string()),
+                );
             } else {
                 builder = builder.insert_bool("date_published", false);
             }
@@ -560,7 +651,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         nav_points.push_str(&self.toc.render_epub());
 
         let data = MapBuilder::new()
-            .insert_str("toc_name", html_escape::encode_text(&self.metadata.toc_name))
+            .insert_str(
+                "toc_name",
+                html_escape::encode_text(&self.metadata.toc_name),
+            )
             .insert_str("nav_points", nav_points.as_str()) // Not escaped: XML content
             .build();
         let mut res: Vec<u8> = vec![];
@@ -612,8 +706,14 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let data = MapBuilder::new()
             .insert_str("content", content) // Not escaped: XML content
-            .insert_str("toc_name", html_escape::encode_text(&self.metadata.toc_name))
-            .insert_str("generator_attr", html_escape::encode_double_quoted_attribute(&self.metadata.generator))
+            .insert_str(
+                "toc_name",
+                html_escape::encode_text(&self.metadata.toc_name),
+            )
+            .insert_str(
+                "generator_attr",
+                html_escape::encode_double_quoted_attribute(&self.metadata.generator),
+            )
             .insert_str(
                 "landmarks",
                 // Not escaped: XML content
