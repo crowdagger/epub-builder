@@ -1,8 +1,8 @@
 ChangeLog
 ==========
 
-0.6.0 (???)
-===========
+0.6.0 (2023-07-23)
+==================
 * Fix all non-valid characters in IDs (thebaron88)
 * Fix multi-author tags (quartzlibrary)
 * Escape nav.xhtml (thebaron88)
