@@ -11,6 +11,7 @@ use crate::{common, EpubContent};
 use std::io;
 use std::io::Read;
 use std::path::Path;
+use std::str::FromStr;
 
 use eyre::{bail, Context, Result};
 use mustache::MapBuilder;
@@ -47,21 +48,15 @@ impl ToString for PageDirection {
     }
 }
 
-impl From<String> for PageDirection {
-    fn from(value: String) -> Self {
-        value.parse().unwrap()
-    }
-}
-
 impl std::str::FromStr for PageDirection {
-    type Err = ();
+    type Err = eyre::Report;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let s = s.to_lowercase();
         match s.as_ref() {
             "rtl" => Ok(PageDirection::Rtl),
             "ltr" => Ok(PageDirection::Ltr),
-            _ => Err(()),
+            _ => bail!("Invalid page direction: {}", s),
         }
     }
 }
@@ -227,7 +222,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
             "title" => self.metadata.title = value.into(),
             "lang" => self.metadata.lang = value.into(),
-            "direction" => self.metadata.direction = value.into().into(),
+            "direction" => self.metadata.direction = PageDirection::from_str(&value.into())?,
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
