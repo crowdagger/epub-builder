@@ -21,19 +21,19 @@ zip-command = ["tempdir"]
 zip-library = ["libzip", "libzip/time"]
 
 [dependencies]
-eyre = "0.6.8"
+eyre = "0.6"
 mustache = "0.9"
-once_cell = "1.13.1"
+once_cell = "1.13"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "wasmbind"] }
 uuid = { version = "1", features = ["v4"] }
 tempdir = { version = "0.3", optional = true } 
 libzip = { version = "0.6", optional = true, default-features = false, features = ["deflate"], package = "zip"} 
-html-escape = "0.2.6"
+html-escape = "0.2"
 log = "0.4"
 
 [dev-dependencies]
 pretty_assertions = "1"
-env_logger = "0.10.0"
+env_logger = "0.10"
 
 [[example]]
 name = "builder"
