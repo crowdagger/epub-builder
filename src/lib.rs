@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! epub-builder = "0.4"
+//! epub-builder = "0.6"
 //! ```
 //!
 //! # Example
