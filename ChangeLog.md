@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+0.7.0 (2023-07-28)
+==================
+* Add a new option to EpubBuilder to disable HTML encoding for fields that don’t require it.
+* Unfortunately this means you need to pass an additional bool to `toc.render` (`true` to keep past behavior)
+
 0.6.0 (2023-07-23)
 ==================
 * Fix all non-valid characters in IDs (thebaron88)
