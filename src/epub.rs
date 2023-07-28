@@ -263,14 +263,14 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Sets the title of the EPUB
-    ///
-    /// This is quite important as EPUB renderers rely on it
-    /// for e.g. hyphenating words.
     pub fn set_title<S: Into<String>>(&mut self, value: S) {
         self.metadata.title = value.into();
     }
 
     /// Sets the language of the EPUB
+    /// 
+    /// This is quite important as EPUB renderers rely on it
+    /// for e.g. hyphenating words.
     pub fn set_lang<S: Into<String>>(&mut self, value: S) {
         self.metadata.lang = value.into();
     }
