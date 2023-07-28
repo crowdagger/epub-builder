@@ -99,7 +99,7 @@ impl TocElement {
 
     /// Render element for Epub's toc.ncx format
     #[doc(hidden)]
-    pub fn render_epub(&self, mut offset: u32) -> (u32, String) {
+    pub fn render_epub(&self, mut offset: u32, escape_html: bool) -> (u32, String) {
         offset += 1;
         let id = offset;
         let children = if self.children.is_empty() {
@@ -107,7 +107,7 @@ impl TocElement {
         } else {
             let mut output: Vec<String> = Vec::new();
             for child in &self.children {
-                let (n, s) = child.render_epub(offset);
+                let (n, s) = child.render_epub(offset, escape_html);
                 offset = n;
                 output.push(s);
             }
@@ -125,7 +125,7 @@ impl TocElement {
   <content src=\"{url}\"/>{children}
 </navPoint>",
                 id = html_escape::encode_double_quoted_attribute(&id.to_string()),
-                title = html_escape::encode_text(&self.title).trim(),
+                title = common::encode_html(&self.title, escape_html).trim(),
                 url = html_escape::encode_double_quoted_attribute(&self.url),
                 children = children, // Not escaped: XML content
             ),
@@ -134,7 +134,7 @@ impl TocElement {
 
     /// Render element as a list element
     #[doc(hidden)]
-    pub fn render(&self, numbered: bool) -> String {
+    pub fn render(&self, numbered: bool, escape_html: bool) -> String {
         if self.title.is_empty() {
             return String::new();
         }
@@ -142,12 +142,12 @@ impl TocElement {
             format!(
                 "<li><a href=\"{link}\">{title}</a></li>",
                 link = html_escape::encode_double_quoted_attribute(&self.url),
-                title = html_escape::encode_text(&self.title),
+                title = common::encode_html(&self.title, escape_html),
             )
         } else {
             let mut output: Vec<String> = Vec::new();
             for child in &self.children {
-                output.push(child.render(numbered));
+                output.push(child.render(numbered, escape_html));
             }
             let children = format!(
                 "<{oul}>\n{children}\n</{oul}>",
@@ -161,7 +161,7 @@ impl TocElement {
 {children}
 </li>",
                 link = html_escape::encode_double_quoted_attribute(&self.url),
-                title = html_escape::encode_text(&self.title),
+                title = common::encode_html(&self.title, escape_html),
                 children = common::indent(children, 1), // Not escaped: XML content
             )
         }
@@ -188,8 +188,8 @@ impl TocElement {
 ///    // add a level-2 element, which will thus get "attached" to previous level-1 element
 ///    .add(TocElement::new("chapter_1.xhtml#section3", "1.3: yet another section")
 ///            .level(2))
-///    // render the toc (non-numbered list) and returns a string
-///    .render(false);
+///    // render the toc (non-numbered list, escape html) and returns a string
+///    .render(false, true);
 /// ```
 #[derive(Debug, Default)]
 pub struct Toc {
@@ -248,11 +248,13 @@ impl Toc {
     }
 
     /// Render the Toc in a toc.ncx compatible way, for EPUB.
-    pub fn render_epub(&mut self) -> String {
+    /// 
+    /// * `escape_html`: whether titles should be HTML-encoded or not (only applies to titles)
+    pub fn render_epub(&mut self, escape_html: bool) -> String {
         let mut output: Vec<String> = Vec::new();
         let mut offset = 0;
         for elem in &self.elements {
-            let (n, s) = elem.render_epub(offset);
+            let (n, s) = elem.render_epub(offset, escape_html);
             offset = n;
             output.push(s);
         }
@@ -260,11 +262,11 @@ impl Toc {
     }
 
     /// Render the Toc in either <ul> or <ol> form (according to numbered)
-    pub fn render(&mut self, numbered: bool) -> String {
+    pub fn render(&mut self, numbered: bool, escape_html: bool) -> String {
         let mut output: Vec<String> = Vec::new();
         for elem in &self.elements {
-            log::debug!("rendered elem: {:?}", &elem.render(numbered));
-            output.push(elem.render(numbered));
+            log::debug!("rendered elem: {:?}", &elem.render(numbered, escape_html));
+            output.push(elem.render(numbered, escape_html));
         }
         common::indent(
             format!(
@@ -289,7 +291,7 @@ fn toc_simple() {
     toc.add(TocElement::new("#3", "1.0.1").level(3));
     toc.add(TocElement::new("#4", "1.1").level(2));
     toc.add(TocElement::new("#5", "2"));
-    let actual = toc.render(false);
+    let actual = toc.render(false, true);
     let expected = "    <ul>
       <li><a href=\"#1\">0.0.1</a></li>
       <li>
@@ -309,7 +311,7 @@ fn toc_epub_simple() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "1"));
     toc.add(TocElement::new("#2", "2"));
-    let actual = toc.render_epub();
+    let actual = toc.render_epub(true);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>1</text>
@@ -332,7 +334,7 @@ fn toc_epub_simple_sublevels() {
     toc.add(TocElement::new("#1.1", "1.1").level(2));
     toc.add(TocElement::new("#2", "2"));
     toc.add(TocElement::new("#2.1", "2.1").level(2));
-    let actual = toc.render_epub();
+    let actual = toc.render_epub(true);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>1</text>
@@ -366,7 +368,7 @@ fn toc_epub_broken_sublevels() {
     toc.add(TocElement::new("#1.1", "1.1").level(2));
     toc.add(TocElement::new("#2", "2"));
     toc.add(TocElement::new("#2.1", "2.1").level(2));
-    let actual = toc.render_epub();
+    let actual = toc.render_epub(true);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>1.1</text>
@@ -392,7 +394,21 @@ fn toc_epub_broken_sublevels() {
 fn toc_epub_title_escaped() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "D&D"));
-    let actual = toc.render_epub();
+    let actual = toc.render_epub(true);
+    let expected = "    <navPoint id=\"navPoint-1\">
+      <navLabel>
+       <text>D&amp;D</text>
+      </navLabel>
+      <content src=\"#1\"/>
+    </navPoint>";
+    assert_eq!(&actual, expected);
+}
+
+#[test]
+fn toc_epub_title_not_escaped() {
+    let mut toc = Toc::new();
+    toc.add(TocElement::new("#1", "D&amp;D"));
+    let actual = toc.render_epub(false);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>D&amp;D</text>

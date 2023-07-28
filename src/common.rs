@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::borrow::Cow;
+
 /// Indent lines of the string
 pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
     s.as_ref()
@@ -15,6 +17,15 @@ pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
         })
         .collect::<Vec<String>>()
         .join("\n")
+}
+
+/// conditionnaly encode HTML
+pub fn encode_html<'a>(s: &'a str, encode: bool) -> Cow<'a, str> {
+  if encode {
+    html_escape::encode_text(s)
+  } else {
+    Cow::Borrowed(s)
+  } 
 }
 
 #[test]

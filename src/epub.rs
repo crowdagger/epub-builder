@@ -152,6 +152,7 @@ pub struct EpubBuilder<Z: Zip> {
     toc: Toc,
     stylesheet: bool,
     inline_toc: bool,
+    escape_html: bool,
 }
 
 impl<Z: Zip> EpubBuilder<Z> {
@@ -165,6 +166,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             toc: Toc::new(),
             stylesheet: false,
             inline_toc: false,
+            escape_html: true,
         };
 
         epub.zip
@@ -265,6 +267,15 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Sets the title of the EPUB
     pub fn set_title<S: Into<String>>(&mut self, value: S) {
         self.metadata.title = value.into();
+    }
+
+    /// Tells whether fields should be HTML-escaped.
+    /// 
+    /// * `true`: fields such as titles, description, and so on will be HTML-escaped everywhere (default)
+    /// * `false`: fields will be left as is (letting you in charge of making 
+    /// sure they do not contain anything illegal, e.g. < and > characters)
+    pub fn escape_html(&mut self, val: bool) {
+        self.escape_html = val;
     }
 
     /// Sets the language of the EPUB
@@ -526,19 +537,19 @@ impl<Z: Zip> EpubBuilder<Z> {
         for desc in &self.metadata.description {
             optional.push(format!(
                 "<dc:description>{}</dc:description>",
-                html_escape::encode_text(&desc),
+                common::encode_html(desc, self.escape_html),
             ));
         }
         for subject in &self.metadata.subject {
             optional.push(format!(
                 "<dc:subject>{}</dc:subject>",
-                html_escape::encode_text(&subject),
+                common::encode_html(subject, self.escape_html),
             ));
         }
         if let Some(ref rights) = self.metadata.license {
             optional.push(format!(
                 "<dc:rights>{}</dc:rights>",
-                html_escape::encode_text(&rights),
+                common::encode_html(rights, self.escape_html),
             ));
         }
         let date_modified = self
@@ -630,20 +641,20 @@ impl<Z: Zip> EpubBuilder<Z> {
                                     "id_attr".to_string(),
                                     html_escape::encode_double_quoted_attribute(&i.to_string()),
                                 )
-                                .insert_str("name".to_string(), html_escape::encode_text(author))
+                                .insert_str("name".to_string(), common::encode_html(author, self.escape_html))
                         });
                     }
                     builder
                 })
                 .insert_str("direction", self.metadata.direction.to_string())
-                .insert_str("title", html_escape::encode_text(&self.metadata.title))
+                .insert_str("title", common::encode_html(&self.metadata.title, self.escape_html))
                 .insert_str(
                     "generator_attr",
                     html_escape::encode_double_quoted_attribute(&self.metadata.generator),
                 )
                 .insert_str(
                     "toc_name",
-                    html_escape::encode_text(&self.metadata.toc_name),
+                    common::encode_html(&self.metadata.toc_name, self.escape_html),
                 )
                 .insert_str(
                     "toc_name_attr",
@@ -686,12 +697,12 @@ impl<Z: Zip> EpubBuilder<Z> {
     fn render_toc(&mut self) -> Result<Vec<u8>> {
         let mut nav_points = String::new();
 
-        nav_points.push_str(&self.toc.render_epub());
+        nav_points.push_str(&self.toc.render_epub(self.escape_html));
 
         let data = MapBuilder::new()
             .insert_str(
                 "toc_name",
-                html_escape::encode_text(&self.metadata.toc_name),
+                common::encode_html(&self.metadata.toc_name, self.escape_html),
             )
             .insert_str("nav_points", nav_points.as_str()) // Not escaped: XML content
             .build();
@@ -704,7 +715,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Render nav.xhtml
     fn render_nav(&mut self, numbered: bool) -> Result<Vec<u8>> {
-        let content = self.toc.render(numbered);
+        let content = self.toc.render(numbered, self.escape_html);
         let mut landmarks: Vec<String> = Vec::new();
         if self.version > EpubVersion::V20 {
             for file in &self.files {
@@ -735,7 +746,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                                 {title}</a></li>",
                             reftype = html_escape::encode_double_quoted_attribute(&reftype),
                             href = html_escape::encode_double_quoted_attribute(&file.file),
-                            title = html_escape::encode_text(&file.title),
+                            title = common::encode_html(&file.title, self.escape_html),
                         ));
                     }
                 }
@@ -746,7 +757,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             .insert_str("content", content) // Not escaped: XML content
             .insert_str(
                 "toc_name",
-                html_escape::encode_text(&self.metadata.toc_name),
+                common::encode_html(&self.metadata.toc_name, self.escape_html),
             )
             .insert_str(
                 "generator_attr",
