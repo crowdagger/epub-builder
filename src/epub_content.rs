@@ -101,6 +101,17 @@ impl<R: Read> EpubContent<R> {
         self
     }
 
+    /// Set the raw title of this content. Only useful if you disable HTML escaping
+    /// and do it yourself.
+    ///
+    /// This raw title must contain no HTML tags but should still be escaped,
+    /// e.g. it can contain &lt; or &gt;, but you have to make sure you encode
+    /// all of this properly.
+    pub fn raw_title<S: Into<String>>(mut self, raw_title: S) -> Self {
+        self.toc.raw_title = Some(raw_title.into());
+        self
+    }
+
     /// Set the level
     pub fn level(mut self, level: i32) -> Self {
         self.toc = self.toc.level(level);

@@ -21,6 +21,8 @@ pub struct TocElement {
     pub url: String,
     /// Title of this entry
     pub title: String,
+    /// Title of this entry without HTML tags (if None, defaults to the main one)
+    pub raw_title: Option<String>,
     /// Inner elements
     pub children: Vec<TocElement>,
 }
@@ -34,6 +36,7 @@ impl TocElement {
             level: 1,
             url: url.into(),
             title: title.into(),
+            raw_title: None,
             children: vec![],
         }
     }
@@ -113,7 +116,11 @@ impl TocElement {
             }
             format!("\n{}", common::indent(output.join("\n"), 1))
         };
-        // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
+        // Try to use the raw title of all HTML elements; if it doesn't exist, insert escaped title
+        let mut title = html_escape::encode_text(&self.title);
+        if let Some(ref raw_title) = &self.raw_title {
+            title = std::borrow::Cow::Borrowed(raw_title);
+        }
         (
             offset,
             format!(
@@ -125,7 +132,7 @@ impl TocElement {
   <content src=\"{url}\"/>{children}
 </navPoint>",
                 id = html_escape::encode_double_quoted_attribute(&id.to_string()),
-                title = common::encode_html(&self.title, escape_html).trim(),
+                title = title.trim(),
                 url = html_escape::encode_double_quoted_attribute(&self.url),
                 children = children, // Not escaped: XML content
             ),
@@ -395,20 +402,6 @@ fn toc_epub_title_escaped() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "D&D"));
     let actual = toc.render_epub(true);
-    let expected = "    <navPoint id=\"navPoint-1\">
-      <navLabel>
-       <text>D&amp;D</text>
-      </navLabel>
-      <content src=\"#1\"/>
-    </navPoint>";
-    assert_eq!(&actual, expected);
-}
-
-#[test]
-fn toc_epub_title_not_escaped() {
-    let mut toc = Toc::new();
-    toc.add(TocElement::new("#1", "D&amp;D"));
-    let actual = toc.render_epub(false);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>D&amp;D</text>
