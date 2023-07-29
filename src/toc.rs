@@ -21,6 +21,8 @@ pub struct TocElement {
     pub url: String,
     /// Title of this entry
     pub title: String,
+    /// Title of this entry without HTML tags (if None, defaults to the same as title)
+    pub raw_title: Option<String>,
     /// Inner elements
     pub children: Vec<TocElement>,
 }
@@ -34,8 +36,17 @@ impl TocElement {
             level: 1,
             url: url.into(),
             title: title.into(),
+            raw_title: None,
             children: vec![],
         }
+    }
+
+    /// Adds an alternate version of the title without HTML tags.
+    /// 
+    /// Useful only if you disable escaping of HTML fields.
+    pub fn raw_title<S: Into<String>>(mut self, title: S) -> TocElement {
+        self.raw_title = Option::Some(title.into());
+        self
     }
 
     /// Sets the level of a TocElement
@@ -98,6 +109,9 @@ impl TocElement {
     }
 
     /// Render element for Epub's toc.ncx format
+    /// 
+    /// toc.ncx doesn’t allow for HTML tags inside <text> so even if escaping is disabled we 
+    /// fall back to raw_title
     #[doc(hidden)]
     pub fn render_epub(&self, mut offset: u32, escape_html: bool) -> (u32, String) {
         offset += 1;
@@ -113,7 +127,10 @@ impl TocElement {
             }
             format!("\n{}", common::indent(output.join("\n"), 1))
         };
-        // Try to sanitize the escape title of all HTML elements; if it fails, insert it as is
+        let mut title = html_escape::encode_text(&self.title);
+        if let Some(ref raw_title) = &self.raw_title {
+            title = std::borrow::Cow::Borrowed(raw_title);
+        };
         (
             offset,
             format!(
@@ -125,8 +142,8 @@ impl TocElement {
   <content src=\"{url}\"/>{children}
 </navPoint>",
                 id = html_escape::encode_double_quoted_attribute(&id.to_string()),
-                title = common::encode_html(&self.title, escape_html).trim(),
                 url = html_escape::encode_double_quoted_attribute(&self.url),
+                title = title.trim(),
                 children = children, // Not escaped: XML content
             ),
         )
@@ -407,7 +424,8 @@ fn toc_epub_title_escaped() {
 #[test]
 fn toc_epub_title_not_escaped() {
     let mut toc = Toc::new();
-    toc.add(TocElement::new("#1", "D&amp;D"));
+    toc.add(TocElement::new("#1", "<em>D&amp;D<em>")
+            .raw_title("D&amp;D"));
     let actual = toc.render_epub(false);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
