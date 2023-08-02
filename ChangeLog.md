@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+0.7.1 (2023-08-02)
+======================
+* Add a new `raw_title` method to `TocElement`to set an alternative HTML-free title when disabling HTML
+ escaping for titles.
+
 0.7.0 (2023-07-28)
 ==================
 * Add a new option to EpubBuilder to disable HTML encoding for fields that don’t require it.
