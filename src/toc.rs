@@ -41,6 +41,16 @@ impl TocElement {
         }
     }
 
+    /// Adds an alternate version of the title without HTML tags.
+    /// 
+    /// Useful only if you disable escaping of HTML fields.
+    pub fn raw_title<S: Into<String>>(mut self, title: S) -> TocElement {
+        self.raw_title = Option::Some(title.into());
+        self
+    }
+
+
+
     /// Sets the level of a TocElement
     pub fn level(mut self, level: i32) -> Self {
         self.level = level;
@@ -402,6 +412,21 @@ fn toc_epub_title_escaped() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "D&D"));
     let actual = toc.render_epub(true);
+    let expected = "    <navPoint id=\"navPoint-1\">
+      <navLabel>
+       <text>D&amp;D</text>
+      </navLabel>
+      <content src=\"#1\"/>
+    </navPoint>";
+    assert_eq!(&actual, expected);
+}
+
+#[test]
+fn toc_epub_title_not_escaped() {
+    let mut toc = Toc::new();
+    toc.add(TocElement::new("#1", "<em>D&amp;D<em>")
+            .raw_title("D&amp;D"));
+    let actual = toc.render_epub(false);
     let expected = "    <navPoint id=\"navPoint-1\">
       <navLabel>
        <text>D&amp;D</text>
