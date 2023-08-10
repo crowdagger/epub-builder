@@ -14,7 +14,6 @@ use std::path::Path;
 use std::str::FromStr;
 
 use eyre::{bail, Context, Result};
-use mustache::MapBuilder;
 
 /// Represents the EPUB version.
 ///
@@ -630,67 +629,39 @@ impl<Z: Zip> EpubBuilder<Z> {
         }
 
         let data = {
-            let mut builder = MapBuilder::new()
-                .insert_str("lang", html_escape::encode_text(&self.metadata.lang))
-                .insert_vec("author", |builder| {
-                    let mut builder = builder;
-                    for (i, author) in self.metadata.author.iter().enumerate() {
-                        builder = builder.push_map(|builder| {
-                            builder
-                                .insert_str(
-                                    "id_attr".to_string(),
-                                    html_escape::encode_double_quoted_attribute(&i.to_string()),
-                                )
-                                .insert_str("name".to_string(), common::encode_html(author, self.escape_html))
-                        });
-                    }
-                    builder
-                })
-                .insert_str("direction", self.metadata.direction.to_string())
-                .insert_str("title", common::encode_html(&self.metadata.title, self.escape_html))
-                .insert_str(
-                    "generator_attr",
-                    html_escape::encode_double_quoted_attribute(&self.metadata.generator),
-                )
-                .insert_str(
-                    "toc_name",
-                    common::encode_html(&self.metadata.toc_name, self.escape_html),
-                )
-                .insert_str(
-                    "toc_name_attr",
-                    html_escape::encode_double_quoted_attribute(&self.metadata.toc_name),
-                )
-                .insert_str("optional", common::indent(optional.join("\n"), 2)) // Not escaped: XML content
-                .insert_str("items", common::indent(items.join("\n"), 2)) // Not escaped: XML content
-                .insert_str("itemrefs", common::indent(itemrefs.join("\n"), 2)) // Not escaped: XML content
-                .insert_str(
-                    "date_modified",
-                    html_escape::encode_text(&date_modified.to_string()),
-                )
-                .insert_str("uuid", html_escape::encode_text(&uuid))
-                .insert_str("guide", common::indent(guide.join("\n"), 2)); // Not escaped: XML content
-
-            if let Some(date) = date_published {
-                builder = builder.insert_str(
-                    "date_published",
-                    html_escape::encode_text(&date.to_string()),
-                );
-            } else {
-                builder = builder.insert_bool("date_published", false);
+            let mut authors: Vec<_> = vec!{};
+            for (i, author) in self.metadata.author.iter().enumerate() {
+                let author: [(&str, String); 2] = [
+                    ("id_attr", html_escape::encode_double_quoted_attribute(&i.to_string()).into()),
+                    ("name", common::encode_html(author, self.escape_html).into())
+                ];
+                authors.push(author);
             }
-
-            builder.build()
+            upon::value! {
+                author: authors,
+                lang: html_escape::encode_text(&self.metadata.lang),
+                direction: self.metadata.direction.to_string(),
+                title: common::encode_html(&self.metadata.title, self.escape_html),
+                generator_attr: html_escape::encode_double_quoted_attribute(&self.metadata.generator),
+                toc_name: common::encode_html(&self.metadata.toc_name, self.escape_html),
+                toc_name_attr: html_escape::encode_double_quoted_attribute(&self.metadata.toc_name),
+                optional: common::indent(optional.join("\n"), 2),
+                items: common::indent(items.join("\n"), 2), // Not escaped: XML content
+                itemrefs: common::indent(itemrefs.join("\n"), 2), // Not escaped: XML content
+                date_modified: html_escape::encode_text(&date_modified.to_string()),
+                uuid: html_escape::encode_text(&uuid), 
+                guide: common::indent(guide.join("\n"), 2), // Not escaped: XML content
+                date_published: if let Some(date) = date_published { date.to_string() } else { String::new() },
+            }
         };
 
-        let mut content = vec![];
-        let res = match self.version {
-            EpubVersion::V20 => templates::v2::CONTENT_OPF.render_data(&mut content, &data),
-            EpubVersion::V30 => templates::v3::CONTENT_OPF.render_data(&mut content, &data),
-        };
+        let mut res:Vec<u8> = vec![];
+        match self.version {
+            EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&data).to_writer(&mut res),
+        }.wrap_err("could not render template for content.opf")?;
 
-        res.wrap_err("could not render template for content.opf")?;
-
-        Ok(content)
+        Ok(res)
     }
 
     /// Render toc.ncx
@@ -699,16 +670,14 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         nav_points.push_str(&self.toc.render_epub(self.escape_html));
 
-        let data = MapBuilder::new()
-            .insert_str(
-                "toc_name",
-                common::encode_html(&self.metadata.toc_name, self.escape_html),
-            )
-            .insert_str("nav_points", nav_points.as_str()) // Not escaped: XML content
-            .build();
+        let data = upon::value! {
+            toc_name: common::encode_html(&self.metadata.toc_name, self.escape_html),
+            nav_points: nav_points
+        };
         let mut res: Vec<u8> = vec![];
         templates::TOC_NCX
-            .render_data(&mut res, &data)
+            .render(&data)
+            .to_writer(&mut res)
             .wrap_err("error rendering toc.ncx template")?;
         Ok(res)
     }
@@ -753,40 +722,28 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
         }
 
-        let data = MapBuilder::new()
-            .insert_str("content", content) // Not escaped: XML content
-            .insert_str(
-                "toc_name",
-                common::encode_html(&self.metadata.toc_name, self.escape_html),
-            )
-            .insert_str(
-                "generator_attr",
-                html_escape::encode_double_quoted_attribute(&self.metadata.generator),
-            )
-            .insert_str(
-                "landmarks",
-                // Not escaped: XML content
-                if !landmarks.is_empty() {
-                    common::indent(
-                        format!(
-                            "<ol>\n{}\n</ol>",
-                            common::indent(landmarks.join("\n"), 1), // Not escaped: XML content
-                        ),
-                        2,
-                    )
-                } else {
-                    String::new()
-                },
-            )
-            .build();
-
-        let mut res = vec![];
-        let eh = match self.version {
-            EpubVersion::V20 => templates::v2::NAV_XHTML.render_data(&mut res, &data),
-            EpubVersion::V30 => templates::v3::NAV_XHTML.render_data(&mut res, &data),
+        let data = upon::value!{
+            content: content, // Not escaped: XML content
+            toc_name: common::encode_html(&self.metadata.toc_name, self.escape_html),
+            generator_attr: html_escape::encode_double_quoted_attribute(&self.metadata.generator),
+            landmarks: if !landmarks.is_empty() {
+                common::indent(
+                    format!(
+                        "<ol>\n{}\n</ol>",
+                        common::indent(landmarks.join("\n"), 1), // Not escaped: XML content
+                    ),
+                    2,
+                )
+            } else {
+                String::new()
+            },
         };
-
-        eh.wrap_err("error rendering nav.xhtml template")?;
+        
+        let mut res: Vec<u8> = vec![];
+        match self.version {
+            EpubVersion::V20 => templates::v2::NAV_XHTML.render(&data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::NAV_XHTML.render(&data).to_writer(&mut res),
+        }.wrap_err("error rendering nav.xhtml template")?;
         Ok(res)
     }
 }
