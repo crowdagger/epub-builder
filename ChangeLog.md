@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.7.3 (2023-08-11)
+==================
+* Fix a bug in EPUB3 template
+
 0.7.2 (2023-08-10)
 ==================
 * Use `upon` instead of `mustache` for the templates.
