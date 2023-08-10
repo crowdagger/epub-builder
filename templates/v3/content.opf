@@ -2,29 +2,31 @@
 <package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="epub-id-1">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"
             xmlns:opf="http://www.idpf.org/2007/opf">
-    <dc:identifier id="epub-id-1">{{{uuid}}}</dc:identifier>
-    <dc:title>{{{title}}}</dc:title>
-    {{#date_published}}
-    <dc:date>{{{date_published}}}</dc:date>
-    {{/date_published}}
-    <dc:language>{{{lang}}}</dc:language>
-    {{#author}}
-    <dc:creator id="epub-creator-{{{id_attr}}}">{{{name}}}</dc:creator>
-    <meta refines="#epub-creator-{{{id_attr}}}" property="role" scheme="marc:relators">aut</meta>
-    {{/author}}
-    <meta property="dcterms:modified">{{{date_modified}}}</meta>
-{{{optional}}}
+    <dc:identifier id="epub-id-1">{{uuid}}</dc:identifier>
+    <dc:title>{{title}}</dc:title>
+    {% if date_published %}
+    <dc:date>{{date_published}}</dc:date>
+    {% endif %}
+    <dc:language>{{lang}}</dc:language>
+    {% if author %}
+    {% for a in author %}
+    <dc:creator id="epub-creator-{{a.id_attr}}">{{a.name}}</dc:creator>
+    <meta refines="#epub-creator-{{a.id_attr}}" property="role" scheme="marc:relators">aut</meta>
+    {% endfor %}
+    {% endif %}
+    <meta property="dcterms:modified">{{date_modified}}</meta>
+{{optional}}
   </metadata>
   <manifest>
     <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
-{{{items}}}
+{{items}}
   </manifest>
   <spine toc="ncx" page-progression-direction="{{direction}}">
-{{{itemrefs}}}
+{{itemrefs}}
   </spine>
   <guide>
-    <reference type="toc" title="{{{toc_name_attr}}}" href="nav.xhtml"/>
-{{{guide}}}
+    <reference type="toc" title="{{toc_name_attr}}" href="nav.xhtml"/>
+{{guide}}
   </guide>
 </package>

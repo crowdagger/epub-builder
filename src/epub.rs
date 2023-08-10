@@ -631,10 +631,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         let data = {
             let mut authors: Vec<_> = vec!{};
             for (i, author) in self.metadata.author.iter().enumerate() {
-                let author: [(&str, String); 2] = [
-                    ("id_attr", html_escape::encode_double_quoted_attribute(&i.to_string()).into()),
-                    ("name", common::encode_html(author, self.escape_html).into())
-                ];
+                let author = upon::value! {
+                    id_attr: html_escape::encode_double_quoted_attribute(&i.to_string()),
+                    name: common::encode_html(author, self.escape_html)
+                };
                 authors.push(author);
             }
             upon::value! {
