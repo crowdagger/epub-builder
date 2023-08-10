@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.7.2 (2023-08-10)
+==================
+* Use `upon` instead of `mustache` for the templates.
+
 0.7.1 (2023-08-02)
 ======================
 * Add a new `raw_title` method to `TocElement`to set an alternative HTML-free title when disabling HTML
