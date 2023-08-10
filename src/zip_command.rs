@@ -17,7 +17,6 @@ use std::process::Command;
 use eyre::bail;
 use eyre::Context;
 use eyre::Result;
-use tempdir::TempDir;
 
 /// Zip files using the system `zip` command.
 ///
@@ -31,14 +30,14 @@ use tempdir::TempDir;
 /// should not be added manually.
 pub struct ZipCommand {
     command: String,
-    temp_dir: TempDir,
+    temp_dir: tempfile::TempDir,
     files: Vec<PathBuf>,
 }
 
 impl ZipCommand {
     /// Creates a new ZipCommand, using default setting to create a temporary directory.
     pub fn new() -> Result<ZipCommand> {
-        let temp_dir = TempDir::new("epub").wrap_err("could not create temporary directory")?;
+        let temp_dir = tempfile::TempDir::new().wrap_err("could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir,
@@ -53,7 +52,7 @@ impl ZipCommand {
     /// * `temp_path`: the path where a temporary directory should be created.
     pub fn new_in<P: AsRef<Path>>(temp_path: P) -> Result<ZipCommand> {
         let temp_dir =
-            TempDir::new_in(temp_path, "epub").wrap_err("could not create temporary directory")?;
+            tempfile::TempDir::new_in(temp_path).wrap_err("could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir,
