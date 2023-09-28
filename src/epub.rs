@@ -777,5 +777,5 @@ fn is_id_char(c: char) -> bool {
 
 // generate an id compatible string, replacing all none ID chars to underscores
 fn to_id(s: &str) -> String {
-    s.replace(|c: char| !is_id_char(c), "_")
+    "id_".to_string() + &s.replace(|c: char| !is_id_char(c), "_")
 }
