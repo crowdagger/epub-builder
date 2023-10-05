@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.7.4 (2023-10-05)
+======================
+* Make sure XML names don't start with invalid characters (dluschan)
+
 0.7.3 (2023-08-11)
 ==================
 * Fix a bug in EPUB3 template
