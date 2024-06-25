@@ -1,6 +1,6 @@
 [package]
 name = "epub-builder"
-version = "0.7.4"
+version = "0.7.5"
 authors = ["Elisabeth Henry <liz.henry@ouvaton.org>"]
 description = "A Rust library for generating EPUB files"
 readme = "README.md"
@@ -23,17 +23,17 @@ zip-library = ["libzip", "libzip/time"]
 [dependencies]
 eyre = "0.6"
 once_cell = "1"
-upon = "0.7"
+upon = "0.8"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "wasmbind"] }
 uuid = { version = "1", features = ["v4"] }
 tempfile = { version = "3", optional = true } 
-libzip = { version = "0.6", optional = true, default-features = false, features = ["deflate"], package = "zip"} 
+libzip = { version = "2.1", optional = true, default-features = false, features = ["deflate"], package = "zip"} 
 html-escape = "0.2"
 log = "0.4"
 
 [dev-dependencies]
 pretty_assertions = "1"
-env_logger = "0.10"
+env_logger = "0.11"
 
 [[example]]
 name = "builder"

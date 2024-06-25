@@ -44,7 +44,7 @@ impl ZipLibrary {
         writer.set_comment(""); // Fix issues with some readers
 
         writer
-            .start_file(
+            .start_file::<_, (), _>(
                 "mimetype",
                 FileOptions::default().compression_method(CompressionMethod::Stored),
             )
@@ -64,7 +64,7 @@ impl Zip for ZipLibrary {
             // Path names should not use backspaces in zip files
             file = file.replace('\\', "/");
         }
-        let options = FileOptions::default();
+        let options: FileOptions<()> = FileOptions::default();
         self.writer
             .start_file(file.clone(), options)
             .wrap_err_with(|| format!("could not create file '{}' in epub", file))?;
@@ -73,7 +73,7 @@ impl Zip for ZipLibrary {
         Ok(())
     }
 
-    fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
+    fn generate<W: Write>(self, mut to: W) -> Result<()> {
         let cursor = self.writer.finish().wrap_err("error writing zip file")?;
         let bytes = cursor.into_inner();
         to.write_all(bytes.as_ref())

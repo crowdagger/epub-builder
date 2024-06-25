@@ -51,8 +51,8 @@ impl ZipCommand {
     /// # Arguments
     /// * `temp_path`: the path where a temporary directory should be created.
     pub fn new_in<P: AsRef<Path>>(temp_path: P) -> Result<ZipCommand> {
-        let temp_dir =
-            tempfile::TempDir::new_in(temp_path).wrap_err("could not create temporary directory")?;
+        let temp_dir = tempfile::TempDir::new_in(temp_path)
+            .wrap_err("could not create temporary directory")?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir,
@@ -133,7 +133,7 @@ impl Zip for ZipCommand {
         Ok(())
     }
 
-    fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
+    fn generate<W: Write>(mut self, mut to: W) -> Result<()> {
         // First, add mimetype and don't compress it
         self.add_to_tmp_dir("mimetype", b"application/epub+zip".as_ref())?;
         let output = Command::new(&self.command)

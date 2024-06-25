@@ -17,5 +17,5 @@ pub trait Zip {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, file: P, content: R) -> Result<()>;
 
     /// Generate the ZIP file
-    fn generate<W: Write>(&mut self, _: W) -> Result<()>;
+    fn generate<W: Write>(self, _: W) -> Result<()>;
 }

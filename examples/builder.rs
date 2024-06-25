@@ -30,8 +30,9 @@ fn run() -> Result<()> {
     let _writer = File::create(_out_file).unwrap();
 
     // Create a new EpubBuilder using the zip library
-    EpubBuilder::new(ZipLibrary::new()?)?
-        // Set some metadata
+    let mut builder = EpubBuilder::new(ZipLibrary::new()?)?;
+    // Set some metadata
+    builder
         .metadata("author", "Joan Doe")?
         .metadata("title", "Dummy Book <T>")?
         // Set the stylesheet (create a "stylesheet.css" file in EPUB that is used by some generated files)
@@ -73,10 +74,10 @@ fn run() -> Result<()> {
         // Add a chapter without a title, which will thus not appear in the TOC.
         .add_content(EpubContent::new("notes.xhtml", dummy_content.as_bytes()))?
         // Generate a toc inside of the document, that will be part of the linear structure.
-        .inline_toc()
-        // Finally, write the EPUB file to stdout
-        .generate(&mut io::stdout())?; // generate into stout
-                                       // .generate(&_writer)?; // generate into temp file to see epub internals
+        .inline_toc();
+    // Finally, write the EPUB file to stdout
+    builder.generate(&mut io::stdout())?; // generate into stout
+                                          // .generate(&_writer)?; // generate into temp file to see epub internals
     log::debug!("dummy book generation is done");
     Ok(())
 }

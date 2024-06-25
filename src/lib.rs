@@ -31,9 +31,9 @@
 //!     let mut output = Vec::<u8>::new();
 //!
 //!     // Create a new EpubBuilder using the zip library
-//!     epub_builder::EpubBuilder::new(epub_builder::ZipLibrary::new()?)?
+//!     let mut builder = epub_builder::EpubBuilder::new(epub_builder::ZipLibrary::new()?)?;
 //!     // Set some metadata
-//!         .metadata("author", "Joan Doe")?
+//!     builder.metadata("author", "Joan Doe")?
 //!         .metadata("title", "Dummy Book")?
 //!     // Set epub version to 3.0
 //!         .epub_version(epub_builder::EpubVersion::V30)
@@ -66,10 +66,10 @@
 //!     // Add a chapter without a title, which will thus not appear in the TOC.
 //!         .add_content(epub_builder::EpubContent::new("notes.xhtml", dummy_content.as_bytes()))?
 //!     // Generate a toc inside of the document, that will be part of the linear structure.
-//!         .inline_toc()
+//!         .inline_toc();
 //!     // Finally, write the EPUB file to a writer. It could be a `Vec<u8>`, a file,
 //!     // `stdout` or whatever you like, it just needs to implement the `std::io::Write` trait.
-//!         .generate(&mut output)?;
+//!     builder.generate(&mut output)?;
 //!     Ok(output)
 //! }
 //!
