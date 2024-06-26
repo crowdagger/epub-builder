@@ -20,16 +20,16 @@ pub fn indent<S: AsRef<str>>(s: S, level: usize) -> String {
 }
 
 /// conditionnaly encode HTML
-pub fn encode_html<'a>(s: &'a str, encode: bool) -> Cow<'a, str> {
-  if encode {
-    html_escape::encode_text(s)
-  } else {
-    Cow::Borrowed(s)
-  } 
+pub fn encode_html(s: &str, encode: bool) -> Cow<'_, str> {
+    if encode {
+        html_escape::encode_text(s)
+    } else {
+        Cow::Borrowed(s)
+    }
 }
 
 #[test]
-#[allow(clippy::blacklisted_name)]
+#[allow(clippy::disallowed_names)]
 fn test_indent() {
     let foo = "Some string with only one line";
     assert_eq!(indent(foo, 3), "      Some string with only one line");

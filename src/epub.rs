@@ -763,9 +763,9 @@ impl<Z: Zip> EpubBuilder<Z> {
 // Ordering to to look as similar as possible to the W3 Recommendation ruleset
 // Slightly more permissive, there are some that are invalid start chars, but this is ok.
 fn is_id_char(c: char) -> bool {
-    ('A'..='Z').contains(&c)
+    c.is_ascii_uppercase()
         || c == '_'
-        || ('a'..='z').contains(&c)
+        || c.is_ascii_lowercase()
         || ('\u{C0}'..='\u{D6}').contains(&c)
         || ('\u{D8}'..='\u{F6}').contains(&c)
         || ('\u{F8}'..='\u{2FF}').contains(&c)
@@ -780,7 +780,7 @@ fn is_id_char(c: char) -> bool {
         || ('\u{10000}'..='\u{EFFFF}').contains(&c)
         || c == '-'
         || c == '.'
-        || ('0'..='9').contains(&c)
+        || c.is_ascii_digit()
         || c == '\u{B7}'
         || ('\u{0300}'..='\u{036F}').contains(&c)
         || ('\u{203F}'..='\u{2040}').contains(&c)
