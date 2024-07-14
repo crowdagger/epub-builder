@@ -145,6 +145,7 @@ impl Content {
 #[derive(Debug)]
 pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
+    direction: PageDirection,    
     zip: Z,
     files: Vec<Content>,
     metadata: Metadata,
@@ -159,6 +160,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
+            direction: PageDirection::Ltr,
             zip,
             files: vec![],
             metadata: Metadata::default(),
@@ -188,6 +190,16 @@ impl<Z: Zip> EpubBuilder<Z> {
         self.version = version;
         self
     }
+    
+    /// Set EPUB Direction (default: Ltr)
+    ///
+    /// * `Ltr`: Left-To-Right 
+    /// * 'Rtl`: Right-To-Left 
+    pub fn epub_direction(&mut self, direction: PageDirection) -> &mut Self {
+        self.direction = direction;
+        self
+    }
+    
 
     /// Set some EPUB metadata
     ///
