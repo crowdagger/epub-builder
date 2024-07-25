@@ -153,6 +153,7 @@ pub struct EpubBuilder<Z: Zip> {
     stylesheet: bool,
     inline_toc: bool,
     escape_html: bool,
+    add_meta_opf: Vec<String>
 }
 
 impl<Z: Zip> EpubBuilder<Z> {
@@ -168,6 +169,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             stylesheet: false,
             inline_toc: false,
             escape_html: true,
+            add_meta_opf: vec![String::from("")]
         };
 
         epub.zip
@@ -200,6 +202,17 @@ impl<Z: Zip> EpubBuilder<Z> {
         self
     }
     
+
+    /// Add custom metadata to `content.opf`
+    ///
+    /// 
+    /// 
+    /// e.g: <meta name="primary-writing-mode" content="vertical-rl"/>"
+
+    pub fn custom_metadata_opf(&mut self, name: String, content: String) -> &mut Self {
+        self.add_meta_opf.push(format!("<meta name=\"{}\" content=\"{}\"/>", name, content));
+        self
+    }
 
     /// Set some EPUB metadata
     ///
@@ -563,6 +576,10 @@ impl<Z: Zip> EpubBuilder<Z> {
                 common::encode_html(rights, self.escape_html),
             ));
         }
+        for meta in &self.add_meta_opf{
+            optional.push(format!("{}", common::encode_html(meta, self.escape_html)));
+        }
+
         let date_modified = self
             .metadata
             .date_modified
