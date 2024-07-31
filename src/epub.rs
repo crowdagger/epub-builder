@@ -38,9 +38,11 @@ pub enum PageDirection {
     Rtl,
 }
 
+
+/// Represents the EPUB <meta> content inside `content.opf` file.
 ///
-/// 
-#[derive(Debug, Clone, Default)]
+/// <meta name="" content="">
+#[derive(Debug)]
 pub struct MetadataOpf {
     name: String,
     content: String
@@ -213,14 +215,18 @@ impl<Z: Zip> EpubBuilder<Z> {
     
 
     /// Add custom <meta> to `content.opf`
-    /// `self.add_metadata_opf(name, content)`
+    /// Syntax: `self.add_metadata_opf(name, content)`
     /// 
     /// ## Example
-    /// e.g: <meta name="primary-writing-mode" content="vertical-rl"/>"
-    /// If you wanna add this line into `content.opf`
+    /// If you wanna add `<meta name="primary-writing-mode" content="vertical-rl"/>` into `content.opf`
     /// 
-    /// self.add_metadata_opf("primary-writing-mode", "vertical-rl")
-
+    /// ```rust
+    /// self.add_metadata_opf(MetadataOpf {
+    ///     name: String::from("primary-writing-mode"),
+    ///     content: String::from("vertical-rl")
+    /// })
+    /// ```
+    /// 
     pub fn add_metadata_opf(&mut self, item: MetadataOpf) -> &mut Self {
         self.meta_opf.push(item);
         self
