@@ -38,6 +38,15 @@ pub enum PageDirection {
     Rtl,
 }
 
+///
+/// 
+#[derive(Debug, Clone, Default)]
+pub struct MetadataOpf {
+    name: String,
+    content: String
+}
+
+
 impl ToString for PageDirection {
     fn to_string(&self) -> String {
         match &self {
@@ -153,7 +162,7 @@ pub struct EpubBuilder<Z: Zip> {
     stylesheet: bool,
     inline_toc: bool,
     escape_html: bool,
-    add_meta_opf: Vec<String>
+    meta_opf: Vec<MetadataOpf>
 }
 
 impl<Z: Zip> EpubBuilder<Z> {
@@ -169,7 +178,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             stylesheet: false,
             inline_toc: false,
             escape_html: true,
-            add_meta_opf: vec![String::from("")]
+            meta_opf: Vec::new()
         };
 
         epub.zip
@@ -203,14 +212,17 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
     
 
-    /// Add custom metadata to `content.opf`
-    ///
+    /// Add custom <meta> to `content.opf`
+    /// `self.add_metadata_opf(name, content)`
     /// 
-    /// 
+    /// ## Example
     /// e.g: <meta name="primary-writing-mode" content="vertical-rl"/>"
+    /// If you wanna add this line into `content.opf`
+    /// 
+    /// self.add_metadata_opf("primary-writing-mode", "vertical-rl")
 
-    pub fn custom_metadata_opf(&mut self, name: String, content: String) -> &mut Self {
-        self.add_meta_opf.push(format!("<meta name=\"{}\" content=\"{}\"/>", name, content));
+    pub fn add_metadata_opf(&mut self, item: MetadataOpf) -> &mut Self {
+        self.meta_opf.push(item);
         self
     }
 
@@ -576,8 +588,12 @@ impl<Z: Zip> EpubBuilder<Z> {
                 common::encode_html(rights, self.escape_html),
             ));
         }
-        for meta in &self.add_meta_opf{
-            optional.push(format!("{}", common::encode_html(meta, self.escape_html)));
+        for meta in &self.meta_opf{
+            optional.push(format!(
+                "<meta name=\"{}\" content=\"{}\"/>", 
+                common::encode_html(&meta.name, self.escape_html),
+                common::encode_html(&meta.content, self.escape_html),
+            ));
         }
 
         let date_modified = self
