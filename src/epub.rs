@@ -39,15 +39,26 @@ pub enum PageDirection {
 }
 
 
-/// Represents the EPUB <meta> content inside `content.opf` file.
+/// Represents the EPUB `<meta>` content inside `content.opf` file.
 ///
 /// <meta name="" content="">
+/// 
 #[derive(Debug)]
 pub struct MetadataOpf {
-    name: String,
-    content: String
+    /// Name of the `<meta>` tag
+    pub name: String,
+    /// Content of the `<meta>` tag
+    pub content: String
 }
 
+impl MetadataOpf {
+    /// Create new instance
+    /// 
+    /// 
+    pub fn new(&self, meta_name: String, meta_content: String) -> Self {
+        Self { name: meta_name, content: meta_content }
+    }
+}
 
 impl ToString for PageDirection {
     fn to_string(&self) -> String {
@@ -207,7 +218,9 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Set EPUB Direction (default: Ltr)
     ///
     /// * `Ltr`: Left-To-Right 
-    /// * 'Rtl`: Right-To-Left 
+    /// * `Rtl`: Right-To-Left 
+    /// 
+    /// 
     pub fn epub_direction(&mut self, direction: PageDirection) -> &mut Self {
         self.direction = direction;
         self
@@ -217,7 +230,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// Add custom <meta> to `content.opf`
     /// Syntax: `self.add_metadata_opf(name, content)`
     /// 
-    /// ## Example
+    /// ### Example
     /// If you wanna add `<meta name="primary-writing-mode" content="vertical-rl"/>` into `content.opf`
     /// 
     /// ```rust
