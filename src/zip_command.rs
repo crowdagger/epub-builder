@@ -3,6 +3,7 @@
 // this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::zip::Zip;
+use crate::Result;
 
 use std::fs;
 use std::fs::DirBuilder;
@@ -13,10 +14,6 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-
-use eyre::bail;
-use eyre::Context;
-use eyre::Result;
 
 /// Zip files using the system `zip` command.
 ///
@@ -37,7 +34,10 @@ pub struct ZipCommand {
 impl ZipCommand {
     /// Creates a new ZipCommand, using default setting to create a temporary directory.
     pub fn new() -> Result<ZipCommand> {
-        let temp_dir = tempfile::TempDir::new().wrap_err("could not create temporary directory")?;
+        let temp_dir = tempfile::TempDir::new().map_err(|e| crate::Error::IoError {
+            msg: "could not create temporary directory".to_string(),
+            cause: e,
+        })?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir,
@@ -51,8 +51,10 @@ impl ZipCommand {
     /// # Arguments
     /// * `temp_path`: the path where a temporary directory should be created.
     pub fn new_in<P: AsRef<Path>>(temp_path: P) -> Result<ZipCommand> {
-        let temp_dir =
-            tempfile::TempDir::new_in(temp_path).wrap_err("could not create temporary directory")?;
+        let temp_dir = tempfile::TempDir::new_in(temp_path).map_err(|e| crate::Error::IoError {
+            msg: "could not create temporary directory".to_string(),
+            cause: e,
+        })?;
         let zip = ZipCommand {
             command: String::from("zip"),
             temp_dir,
@@ -73,13 +75,16 @@ impl ZipCommand {
             .current_dir(self.temp_dir.path())
             .arg("-v")
             .output()
-            .wrap_err_with(|| format!("failed to run command {name}", name = self.command))?;
+            .map_err(|e| crate::Error::IoError {
+                msg: format!("failed to run command {name}", name = self.command),
+                cause: e,
+            })?;
         if !output.status.success() {
-            bail!(
-                "command {name} didn't return successfully: {output}",
+            return Err(crate::Error::ZipCommandError(format!(
+                "command {name} did not exit successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
-            );
+            )));
         }
         Ok(())
     }
@@ -93,25 +98,28 @@ impl ZipCommand {
             DirBuilder::new()
                 .recursive(true)
                 .create(dest_dir)
-                .wrap_err_with(|| {
-                    format!(
+                .map_err(|e| crate::Error::IoError {
+                    msg: format!(
                         "could not create temporary directory in {path}",
                         path = dest_dir.display()
-                    )
+                    ),
+                    cause: e,
                 })?;
         }
 
-        let mut f = File::create(&dest_file).wrap_err_with(|| {
-            format!(
+        let mut f = File::create(&dest_file).map_err(|e| crate::Error::IoError {
+            msg: format!(
                 "could not write to temporary file {file}",
                 file = path.as_ref().display()
-            )
+            ),
+            cause: e,
         })?;
-        io::copy(&mut content, &mut f).wrap_err_with(|| {
-            format!(
+        io::copy(&mut content, &mut f).map_err(|e| crate::Error::IoError {
+            msg: format!(
                 "could not write to temporary file {file}",
                 file = path.as_ref().display()
-            )
+            ),
+            cause: e,
         })?;
         Ok(())
     }
@@ -121,11 +129,11 @@ impl Zip for ZipCommand {
     fn write_file<P: AsRef<Path>, R: Read>(&mut self, path: P, content: R) -> Result<()> {
         let path = path.as_ref();
         if path.starts_with("..") || path.is_absolute() {
-            bail!(
+            return Err(crate::Error::InvalidPath(format!(
                 "file {} refers to a path outside the temporary directory. This is \
                    verbotten!",
                 path.display()
-            );
+            )));
         }
 
         self.add_to_tmp_dir(path, content)?;
@@ -142,13 +150,18 @@ impl Zip for ZipCommand {
             .arg("output.epub")
             .arg("mimetype")
             .output()
-            .wrap_err_with(|| format!("failed to run command {name}", name = self.command))?;
+            .map_err(|e| {
+                crate::Error::ZipCommandError(format!(
+                    "failed to run command {name}: {e:?}",
+                    name = self.command
+                ))
+            })?;
         if !output.status.success() {
-            bail!(
+            return Err(crate::Error::ZipCommandError(format!(
                 "command {name} didn't return successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
-            );
+            )));
         }
 
         let mut command = Command::new(&self.command);
@@ -160,20 +173,30 @@ impl Zip for ZipCommand {
             command.arg(format!("{}", file.display()));
         }
 
-        let output = command
-            .output()
-            .wrap_err_with(|| format!("failed to run command {name}", name = self.command))?;
+        let output = command.output().map_err(|e| {
+            crate::Error::ZipCommandError(format!(
+                "failed to run command {name}: {e:?}",
+                name = self.command
+            ))
+        })?;
         if output.status.success() {
-            let mut f = File::open(self.temp_dir.path().join("output.epub"))
-                .wrap_err("error reading temporary epub file")?;
-            io::copy(&mut f, &mut to).wrap_err("error writing result of the zip command")?;
+            let mut f = File::open(self.temp_dir.path().join("output.epub")).map_err(|e| {
+                crate::Error::IoError {
+                    msg: "error reading temporary epub file".to_string(),
+                    cause: e,
+                }
+            })?;
+            io::copy(&mut f, &mut to).map_err(|e| crate::Error::IoError {
+                msg: "error writing result of the zip command".to_string(),
+                cause: e,
+            })?;
             Ok(())
         } else {
-            bail!(
+            Err(crate::Error::ZipCommandError(format!(
                 "command {name} didn't return successfully: {output}",
                 name = self.command,
                 output = String::from_utf8_lossy(&output.stderr)
-            );
+            )))
         }
     }
 }

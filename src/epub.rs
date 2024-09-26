@@ -6,14 +6,13 @@ use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
 use crate::ReferenceType;
+use crate::Result;
 use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
-
-use eyre::{bail, Context, Result};
 
 /// Represents the EPUB version.
 ///
@@ -47,15 +46,15 @@ impl ToString for PageDirection {
     }
 }
 
-impl std::str::FromStr for PageDirection {
-    type Err = eyre::Report;
+impl FromStr for PageDirection {
+    type Err = crate::Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let s = s.to_lowercase();
         match s.as_ref() {
             "rtl" => Ok(PageDirection::Rtl),
             "ltr" => Ok(PageDirection::Ltr),
-            _ => bail!("Invalid page direction: {}", s),
+            _ => Err(crate::Error::PageDirectionError(s)),
         }
     }
 }
@@ -243,7 +242,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
-            s => bail!("invalid metadata '{}'", s),
+            s => Err(crate::Error::InvalidMetadataError(s.to_string()))?,
         }
         Ok(self)
     }
@@ -269,16 +268,16 @@ impl<Z: Zip> EpubBuilder<Z> {
     }
 
     /// Tells whether fields should be HTML-escaped.
-    /// 
+    ///
     /// * `true`: fields such as titles, description, and so on will be HTML-escaped everywhere (default)
-    /// * `false`: fields will be left as is (letting you in charge of making 
+    /// * `false`: fields will be left as is (letting you in charge of making
     /// sure they do not contain anything illegal, e.g. < and > characters)
     pub fn escape_html(&mut self, val: bool) {
         self.escape_html = val;
     }
 
     /// Sets the language of the EPUB
-    /// 
+    ///
     /// This is quite important as EPUB renderers rely on it
     /// for e.g. hyphenating words.
     pub fn set_lang<S: Into<String>>(&mut self, value: S) {
@@ -649,7 +648,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 items: common::indent(items.join("\n"), 2), // Not escaped: XML content
                 itemrefs: common::indent(itemrefs.join("\n"), 2), // Not escaped: XML content
                 date_modified: html_escape::encode_text(&date_modified.to_string()),
-                uuid: html_escape::encode_text(&uuid), 
+                uuid: html_escape::encode_text(&uuid),
                 guide: common::indent(guide.join("\n"), 2), // Not escaped: XML content
                 date_published: if let Some(date) = date_published { date.to_string() } else { String::new() },
             }
@@ -659,7 +658,12 @@ impl<Z: Zip> EpubBuilder<Z> {
         match self.version {
             EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&data).to_writer(&mut res),
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&data).to_writer(&mut res),
-        }.wrap_err("could not render template for content.opf")?;
+        }
+        .map_err(|e| crate::Error::TemplateError {
+            msg: "could not render template for content.opf".to_string(),
+            cause: e.into(),
+        })?;
+        //.wrap_err("could not render template for content.opf")?;
 
         Ok(res)
     }
@@ -678,7 +682,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         templates::TOC_NCX
             .render(&data)
             .to_writer(&mut res)
-            .wrap_err("error rendering toc.ncx template")?;
+            .map_err(|e| crate::Error::TemplateError {
+                msg: "error rendering toc.ncx template".to_string(),
+                cause: e.into(),
+            })?;
         Ok(res)
     }
 
@@ -738,12 +745,16 @@ impl<Z: Zip> EpubBuilder<Z> {
                 String::new()
             },
         };
-        
+
         let mut res: Vec<u8> = vec![];
         match self.version {
             EpubVersion::V20 => templates::v2::NAV_XHTML.render(&data).to_writer(&mut res),
             EpubVersion::V30 => templates::v3::NAV_XHTML.render(&data).to_writer(&mut res),
-        }.wrap_err("error rendering nav.xhtml template")?;
+        }
+        .map_err(|e| crate::Error::TemplateError {
+            msg: "error rendering nav.xhtml template".to_string(),
+            cause: e.into(),
+        })?;
         Ok(res)
     }
 }

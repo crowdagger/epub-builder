@@ -21,13 +21,13 @@ zip-command = ["tempfile"]
 zip-library = ["libzip", "libzip/time"]
 
 [dependencies]
-eyre = "0.6"
+thiserror = "1.0.64"
 once_cell = "1"
 upon = "0.7"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "wasmbind"] }
 uuid = { version = "1", features = ["v4"] }
-tempfile = { version = "3", optional = true } 
-libzip = { version = "0.6", optional = true, default-features = false, features = ["deflate"], package = "zip"} 
+tempfile = { version = "3", optional = true }
+libzip = { version = "0.6", optional = true, default-features = false, features = ["deflate"], package = "zip" }
 html-escape = "0.2"
 log = "0.4"
 
