@@ -1,6 +1,11 @@
 ChangeLog
 ==========
 
+0.8.0 (unreleased)
+==================
+* Use `upon` instead of `eyre`
+* Add a way to change epub direction
+
 0.7.4 (2023-10-05)
 ======================
 * Make sure XML names don't start with invalid characters (dluschan)
