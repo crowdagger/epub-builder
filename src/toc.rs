@@ -42,14 +42,12 @@ impl TocElement {
     }
 
     /// Adds an alternate version of the title without HTML tags.
-    /// 
+    ///
     /// Useful only if you disable escaping of HTML fields.
     pub fn raw_title<S: Into<String>>(mut self, title: S) -> TocElement {
         self.raw_title = Option::Some(title.into());
         self
     }
-
-
 
     /// Sets the level of a TocElement
     pub fn level(mut self, level: i32) -> Self {
@@ -135,7 +133,7 @@ impl TocElement {
             offset,
             format!(
                 "\
-<navPoint id=\"navPoint-{id}\">
+<navPoint playOrder=\"{id}\" id=\"navPoint-{id}\">
   <navLabel>
    <text>{title}</text>
   </navLabel>
@@ -265,7 +263,7 @@ impl Toc {
     }
 
     /// Render the Toc in a toc.ncx compatible way, for EPUB.
-    /// 
+    ///
     /// * `escape_html`: whether titles should be HTML-encoded or not (only applies to titles)
     pub fn render_epub(&mut self, escape_html: bool) -> String {
         let mut output: Vec<String> = Vec::new();
@@ -289,7 +287,7 @@ impl Toc {
             format!(
                 "<{oul}>\n{output}\n</{oul}>",
                 output = common::indent(output.join("\n"), 1), // Not escaped: XML content
-                oul = if numbered { "ol" } else { "ul" } // Not escaped: Static string
+                oul = if numbered { "ol" } else { "ul" }       // Not escaped: Static string
             ),
             2,
         )
@@ -329,13 +327,13 @@ fn toc_epub_simple() {
     toc.add(TocElement::new("#1", "1"));
     toc.add(TocElement::new("#2", "2"));
     let actual = toc.render_epub(true);
-    let expected = "    <navPoint id=\"navPoint-1\">
+    let expected = "    <navPoint playOrder=\"1\" id=\"navPoint-1\">
       <navLabel>
        <text>1</text>
       </navLabel>
       <content src=\"#1\"/>
     </navPoint>
-    <navPoint id=\"navPoint-2\">
+    <navPoint playOrder=\"2\" id=\"navPoint-2\">
       <navLabel>
        <text>2</text>
       </navLabel>
@@ -352,24 +350,24 @@ fn toc_epub_simple_sublevels() {
     toc.add(TocElement::new("#2", "2"));
     toc.add(TocElement::new("#2.1", "2.1").level(2));
     let actual = toc.render_epub(true);
-    let expected = "    <navPoint id=\"navPoint-1\">
+    let expected = "    <navPoint playOrder=\"1\" id=\"navPoint-1\">
       <navLabel>
        <text>1</text>
       </navLabel>
       <content src=\"#1\"/>
-      <navPoint id=\"navPoint-2\">
+      <navPoint playOrder=\"2\" id=\"navPoint-2\">
         <navLabel>
          <text>1.1</text>
         </navLabel>
         <content src=\"#1.1\"/>
       </navPoint>
     </navPoint>
-    <navPoint id=\"navPoint-3\">
+    <navPoint playOrder=\"3\" id=\"navPoint-3\">
       <navLabel>
        <text>2</text>
       </navLabel>
       <content src=\"#2\"/>
-      <navPoint id=\"navPoint-4\">
+      <navPoint playOrder=\"4\" id=\"navPoint-4\">
         <navLabel>
          <text>2.1</text>
         </navLabel>
@@ -386,18 +384,18 @@ fn toc_epub_broken_sublevels() {
     toc.add(TocElement::new("#2", "2"));
     toc.add(TocElement::new("#2.1", "2.1").level(2));
     let actual = toc.render_epub(true);
-    let expected = "    <navPoint id=\"navPoint-1\">
+    let expected = "    <navPoint playOrder=\"1\" id=\"navPoint-1\">
       <navLabel>
        <text>1.1</text>
       </navLabel>
       <content src=\"#1.1\"/>
     </navPoint>
-    <navPoint id=\"navPoint-2\">
+    <navPoint playOrder=\"2\" id=\"navPoint-2\">
       <navLabel>
        <text>2</text>
       </navLabel>
       <content src=\"#2\"/>
-      <navPoint id=\"navPoint-3\">
+      <navPoint playOrder=\"3\" id=\"navPoint-3\">
         <navLabel>
          <text>2.1</text>
         </navLabel>
@@ -412,7 +410,7 @@ fn toc_epub_title_escaped() {
     let mut toc = Toc::new();
     toc.add(TocElement::new("#1", "D&D"));
     let actual = toc.render_epub(true);
-    let expected = "    <navPoint id=\"navPoint-1\">
+    let expected = "    <navPoint playOrder=\"1\" id=\"navPoint-1\">
       <navLabel>
        <text>D&amp;D</text>
       </navLabel>
@@ -424,10 +422,9 @@ fn toc_epub_title_escaped() {
 #[test]
 fn toc_epub_title_not_escaped() {
     let mut toc = Toc::new();
-    toc.add(TocElement::new("#1", "<em>D&amp;D<em>")
-            .raw_title("D&amp;D"));
+    toc.add(TocElement::new("#1", "<em>D&amp;D<em>").raw_title("D&amp;D"));
     let actual = toc.render_epub(false);
-    let expected = "    <navPoint id=\"navPoint-1\">
+    let expected = "    <navPoint playOrder=\"1\" id=\"navPoint-1\">
       <navLabel>
        <text>D&amp;D</text>
       </navLabel>

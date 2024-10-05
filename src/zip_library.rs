@@ -41,7 +41,6 @@ impl ZipLibrary {
     pub fn new() -> Result<ZipLibrary> {
         let mut writer = ZipWriter::new(Cursor::new(vec![]));
         writer.set_comment(""); // Fix issues with some readers
-
         writer.start_file(
             "mimetype",
             FileOptions::default().compression_method(CompressionMethod::Stored),

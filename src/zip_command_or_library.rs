@@ -29,10 +29,10 @@ impl Zip for ZipCommandOrLibrary {
         }
     }
 
-    fn generate<W: Write>(&mut self, to: W) -> Result<()> {
+    fn generate<W: Write>(self, to: W) -> Result<()> {
         match self {
-            ZipCommandOrLibrary::Command(ref mut command) => command.generate(to),
-            ZipCommandOrLibrary::Library(ref mut library) => library.generate(to),
+            ZipCommandOrLibrary::Command(command) => command.generate(to),
+            ZipCommandOrLibrary::Library(library) => library.generate(to),
         }
     }
 }

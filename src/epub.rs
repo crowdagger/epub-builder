@@ -560,7 +560,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// let mut epub: Vec<u8> = vec!();
     /// builder.generate(&mut epub).unwrap();
     /// ```
-    pub fn generate<W: io::Write>(&mut self, to: W) -> Result<()> {
+    pub fn generate<W: io::Write>(mut self, to: W) -> Result<()> {
         // If no styleesheet was provided, generate a dummy one
         if !self.stylesheet {
             self.stylesheet(b"".as_ref())?;
@@ -692,7 +692,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         }
 
         let data = {
-            let mut authors: Vec<_> = vec!{};
+            let mut authors: Vec<_> = vec![];
             for (i, author) in self.metadata.author.iter().enumerate() {
                 let author = upon::value! {
                     id_attr: html_escape::encode_double_quoted_attribute(&i.to_string()),
@@ -718,7 +718,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
         };
 
-        let mut res:Vec<u8> = vec![];
+        let mut res: Vec<u8> = vec![];
         match self.version {
             EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&data).to_writer(&mut res),
             EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&data).to_writer(&mut res),
@@ -744,7 +744,7 @@ impl<Z: Zip> EpubBuilder<Z> {
         };
         let mut res: Vec<u8> = vec![];
         templates::TOC_NCX
-            .render(&data)
+            .render(&Engine::new(), &data)
             .to_writer(&mut res)
             .map_err(|e| crate::Error::TemplateError {
                 msg: "error rendering toc.ncx template".to_string(),
@@ -793,7 +793,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
         }
 
-        let data = upon::value!{
+        let data = upon::value! {
             content: content, // Not escaped: XML content
             toc_name: common::encode_html(&self.metadata.toc_name, self.escape_html),
             generator_attr: html_escape::encode_double_quoted_attribute(&self.metadata.generator),
@@ -827,9 +827,9 @@ impl<Z: Zip> EpubBuilder<Z> {
 // Ordering to to look as similar as possible to the W3 Recommendation ruleset
 // Slightly more permissive, there are some that are invalid start chars, but this is ok.
 fn is_id_char(c: char) -> bool {
-    ('A'..='Z').contains(&c)
+    c.is_ascii_uppercase()
         || c == '_'
-        || ('a'..='z').contains(&c)
+        || c.is_ascii_lowercase()
         || ('\u{C0}'..='\u{D6}').contains(&c)
         || ('\u{D8}'..='\u{F6}').contains(&c)
         || ('\u{F8}'..='\u{2FF}').contains(&c)
@@ -844,7 +844,7 @@ fn is_id_char(c: char) -> bool {
         || ('\u{10000}'..='\u{EFFFF}').contains(&c)
         || c == '-'
         || c == '.'
-        || ('0'..='9').contains(&c)
+        || c.is_ascii_digit()
         || c == '\u{B7}'
         || ('\u{0300}'..='\u{036F}').contains(&c)
         || ('\u{203F}'..='\u{2040}').contains(&c)
