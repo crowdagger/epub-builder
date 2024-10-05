@@ -6,7 +6,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
-use eyre::Result;
+use crate::Result;
 
 /// An abstraction over possible Zip implementations.
 ///

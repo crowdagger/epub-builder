@@ -6,15 +6,13 @@ use crate::templates;
 use crate::toc::{Toc, TocElement};
 use crate::zip::Zip;
 use crate::ReferenceType;
+use crate::Result;
 use crate::{common, EpubContent};
 
 use std::io;
 use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
-
-use eyre::{bail, Context, Result};
-use upon::Engine;
 
 /// Represents the EPUB version.
 ///
@@ -39,6 +37,28 @@ pub enum PageDirection {
     Rtl,
 }
 
+
+/// Represents the EPUB `<meta>` content inside `content.opf` file.
+///
+/// <meta name="" content="">
+/// 
+#[derive(Debug)]
+pub struct MetadataOpf {
+    /// Name of the `<meta>` tag
+    pub name: String,
+    /// Content of the `<meta>` tag
+    pub content: String
+}
+
+impl MetadataOpf {
+    /// Create new instance
+    /// 
+    /// 
+    pub fn new(&self, meta_name: String, meta_content: String) -> Self {
+        Self { name: meta_name, content: meta_content }
+    }
+}
+
 impl ToString for PageDirection {
     fn to_string(&self) -> String {
         match &self {
@@ -48,15 +68,15 @@ impl ToString for PageDirection {
     }
 }
 
-impl std::str::FromStr for PageDirection {
-    type Err = eyre::Report;
+impl FromStr for PageDirection {
+    type Err = crate::Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let s = s.to_lowercase();
         match s.as_ref() {
             "rtl" => Ok(PageDirection::Rtl),
             "ltr" => Ok(PageDirection::Ltr),
-            _ => bail!("Invalid page direction: {}", s),
+            _ => Err(crate::Error::PageDirectionError(s)),
         }
     }
 }
@@ -146,6 +166,7 @@ impl Content {
 #[derive(Debug)]
 pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
+    direction: PageDirection,    
     zip: Z,
     files: Vec<Content>,
     metadata: Metadata,
@@ -153,6 +174,7 @@ pub struct EpubBuilder<Z: Zip> {
     stylesheet: bool,
     inline_toc: bool,
     escape_html: bool,
+    meta_opf: Vec<MetadataOpf>
 }
 
 impl<Z: Zip> EpubBuilder<Z> {
@@ -160,6 +182,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
+            direction: PageDirection::Ltr,
             zip,
             files: vec![],
             metadata: Metadata::default(),
@@ -167,6 +190,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             stylesheet: false,
             inline_toc: false,
             escape_html: true,
+            meta_opf: Vec::new()
         };
 
         epub.zip
@@ -187,6 +211,36 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// * 'V30`: EPUB 3.0.1
     pub fn epub_version(&mut self, version: EpubVersion) -> &mut Self {
         self.version = version;
+        self
+    }
+    
+    /// Set EPUB Direction (default: Ltr)
+    ///
+    /// * `Ltr`: Left-To-Right 
+    /// * `Rtl`: Right-To-Left 
+    /// 
+    /// 
+    pub fn epub_direction(&mut self, direction: PageDirection) -> &mut Self {
+        self.direction = direction;
+        self
+    }
+    
+
+    /// Add custom <meta> to `content.opf`
+    /// Syntax: `self.add_metadata_opf(name, content)`
+    /// 
+    /// ### Example
+    /// If you wanna add `<meta name="primary-writing-mode" content="vertical-rl"/>` into `content.opf`
+    /// 
+    /// ```rust
+    /// self.add_metadata_opf(MetadataOpf {
+    ///     name: String::from("primary-writing-mode"),
+    ///     content: String::from("vertical-rl")
+    /// })
+    /// ```
+    /// 
+    pub fn add_metadata_opf(&mut self, item: MetadataOpf) -> &mut Self {
+        self.meta_opf.push(item);
         self
     }
 
@@ -244,7 +298,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
-            s => bail!("invalid metadata '{}'", s),
+            s => Err(crate::Error::InvalidMetadataError(s.to_string()))?,
         }
         Ok(self)
     }
@@ -552,6 +606,14 @@ impl<Z: Zip> EpubBuilder<Z> {
                 common::encode_html(rights, self.escape_html),
             ));
         }
+        for meta in &self.meta_opf{
+            optional.push(format!(
+                "<meta name=\"{}\" content=\"{}\"/>", 
+                common::encode_html(&meta.name, self.escape_html),
+                common::encode_html(&meta.content, self.escape_html),
+            ));
+        }
+
         let date_modified = self
             .metadata
             .date_modified
@@ -658,14 +720,14 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let mut res: Vec<u8> = vec![];
         match self.version {
-            EpubVersion::V20 => templates::v2::CONTENT_OPF
-                .render(&Engine::new(), &data)
-                .to_writer(&mut res),
-            EpubVersion::V30 => templates::v3::CONTENT_OPF
-                .render(&Engine::new(), &data)
-                .to_writer(&mut res),
+            EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&data).to_writer(&mut res),
         }
-        .wrap_err("could not render template for content.opf")?;
+        .map_err(|e| crate::Error::TemplateError {
+            msg: "could not render template for content.opf".to_string(),
+            cause: e.into(),
+        })?;
+        //.wrap_err("could not render template for content.opf")?;
 
         Ok(res)
     }
@@ -684,7 +746,10 @@ impl<Z: Zip> EpubBuilder<Z> {
         templates::TOC_NCX
             .render(&Engine::new(), &data)
             .to_writer(&mut res)
-            .wrap_err("error rendering toc.ncx template")?;
+            .map_err(|e| crate::Error::TemplateError {
+                msg: "error rendering toc.ncx template".to_string(),
+                cause: e.into(),
+            })?;
         Ok(res)
     }
 
@@ -747,14 +812,13 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let mut res: Vec<u8> = vec![];
         match self.version {
-            EpubVersion::V20 => templates::v2::NAV_XHTML
-                .render(&Engine::new(), &data)
-                .to_writer(&mut res),
-            EpubVersion::V30 => templates::v3::NAV_XHTML
-                .render(&Engine::new(), &data)
-                .to_writer(&mut res),
+            EpubVersion::V20 => templates::v2::NAV_XHTML.render(&data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::NAV_XHTML.render(&data).to_writer(&mut res),
         }
-        .wrap_err("error rendering nav.xhtml template")?;
+        .map_err(|e| crate::Error::TemplateError {
+            msg: "error rendering nav.xhtml template".to_string(),
+            cause: e.into(),
+        })?;
         Ok(res)
     }
 }
