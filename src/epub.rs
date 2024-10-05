@@ -234,10 +234,15 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// If you wanna add `<meta name="primary-writing-mode" content="vertical-rl"/>` into `content.opf`
     /// 
     /// ```rust
-    /// self.add_metadata_opf(MetadataOpf {
+    /// use epub_builder::EpubBuilder;
+    /// use epub_builder::ZipCommand;
+    /// use epub_builder::MetadataOpf;
+    /// let mut builder = EpubBuilder::new(ZipCommand::new().unwrap()).unwrap();
+
+    /// builder.add_metadata_opf(MetadataOpf {
     ///     name: String::from("primary-writing-mode"),
     ///     content: String::from("vertical-rl")
-    /// })
+    /// });
     /// ```
     /// 
     pub fn add_metadata_opf(&mut self, item: MetadataOpf) -> &mut Self {
