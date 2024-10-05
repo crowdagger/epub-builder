@@ -11,8 +11,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
-use eyre::Context;
-use eyre::Result;
+use crate::Result;
 use libzip::write::FileOptions;
 use libzip::CompressionMethod;
 use libzip::ZipWriter;
@@ -43,15 +42,16 @@ impl ZipLibrary {
         let mut writer = ZipWriter::new(Cursor::new(vec![]));
         writer.set_comment(""); // Fix issues with some readers
 
-        writer
-            .start_file(
-                "mimetype",
-                FileOptions::default().compression_method(CompressionMethod::Stored),
-            )
-            .wrap_err("could not create mimetype in epub")?;
+        writer.start_file(
+            "mimetype",
+            FileOptions::default().compression_method(CompressionMethod::Stored),
+        )?;
         writer
             .write(b"application/epub+zip")
-            .wrap_err("could not write mimetype in epub")?;
+            .map_err(|e| crate::Error::IoError {
+                msg: "could not write mimetype in epub".to_string(),
+                cause: e,
+            })?;
 
         Ok(ZipLibrary { writer })
     }
@@ -65,19 +65,33 @@ impl Zip for ZipLibrary {
             file = file.replace('\\', "/");
         }
         let options = FileOptions::default();
-        self.writer
-            .start_file(file.clone(), options)
-            .wrap_err_with(|| format!("could not create file '{}' in epub", file))?;
-        io::copy(&mut content, &mut self.writer)
-            .wrap_err_with(|| format!("could not write file '{}' in epub", file))?;
+        self.writer.start_file(file.clone(), options).map_err(|e| {
+            crate::Error::ZipErrorWithMessage {
+                msg: format!("could not create file '{}' in epub", file),
+                cause: e,
+            }
+        })?;
+        io::copy(&mut content, &mut self.writer).map_err(|e| crate::Error::IoError {
+            msg: format!("could not write file '{}' in epub", file),
+            cause: e,
+        })?;
         Ok(())
     }
 
     fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
-        let cursor = self.writer.finish().wrap_err("error writing zip file")?;
+        let cursor = self
+            .writer
+            .finish()
+            .map_err(|e| crate::Error::ZipErrorWithMessage {
+                msg: "error writing zip file".to_string(),
+                cause: e,
+            })?;
         let bytes = cursor.into_inner();
         to.write_all(bytes.as_ref())
-            .wrap_err("error writing zip file")?;
+            .map_err(|e| crate::Error::IoError {
+                msg: "error writing to file".to_string(),
+                cause: e,
+            })?;
         Ok(())
     }
 }

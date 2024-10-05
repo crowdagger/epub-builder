@@ -143,6 +143,7 @@ pub use epub::EpubVersion;
 pub use epub::PageDirection;
 pub use epub_content::EpubContent;
 pub use epub_content::ReferenceType;
+use libzip::result::ZipError;
 pub use toc::Toc;
 pub use toc::TocElement;
 #[cfg(feature = "zip-command")]
@@ -153,5 +154,59 @@ pub use zip_command_or_library::ZipCommandOrLibrary;
 #[cfg(feature = "libzip")]
 pub use zip_library::ZipLibrary;
 
-/// Re-exports the result type used across the library.
-pub use eyre::Result;
+/// Error type of this crate. Each variant represent a type of event that may happen during this crate's operations.
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    /// An error caused while processing a template or its rendering.
+    #[error("{msg}: {cause:?}")]
+    TemplateError {
+        /// A message explaining what was happening when we recieved this error.
+        msg: String,
+        /// The root cause of the error.
+        // Box the error, since it is quite large (at least 136 bytes, thanks clippy!)
+        cause: Box<upon::Error>,
+    },
+    /// An error returned when encountering an unknown [`PageDirection`].
+    #[error("Invalid page direction specification: {0}")]
+    PageDirectionError(String),
+    /// An error returned when an unknown metadata key has been encountered.
+    #[error("Invalid metadata key: {0}")]
+    InvalidMetadataError(String),
+    /// An error returned when attempting to access the filesystem
+    #[error("{msg}: {cause:?}")]
+    IoError {
+        /// A message explaining what was happening when we recieved this error.
+        msg: String,
+        /// The root cause of the error.
+        cause: std::io::Error,
+    },
+    /// An error returned when something happened while invoking a zip program. See [`ZipCommand`].
+    #[error("Error while executing zip command: {0}")]
+    ZipCommandError(String),
+    /// An error returned when the zip library itself returned an error. See [`ZipLibrary`].
+    #[error(transparent)]
+    ZipError(#[from] ZipError),
+    /// An error returned when the zip library itself returned an error, but with an additional message. See [`ZipLibrary`].
+    #[error("{msg}: {cause:?}")]
+    ZipErrorWithMessage {
+        /// A message explaining what was happening when we recieved this error.
+        msg: String,
+        /// The root cause of the error.
+        cause: ZipError,
+    },
+    /// An error returned when an invalid [`Path`] has been encountered during epub processing.
+    #[error("Invalid path: {0}")]
+    InvalidPath(String),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Error::IoError {
+            msg: format!("{value:?}"),
+            cause: value,
+        }
+    }
+}
+
+/// A more convenient shorthand for functions returning an error in this crate.
+pub type Result<T> = std::result::Result<T, Error>;
