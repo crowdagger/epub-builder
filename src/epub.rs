@@ -13,6 +13,7 @@ use std::io;
 use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
+use upon::Engine;
 
 /// Represents the EPUB version.
 ///
@@ -720,8 +721,8 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let mut res: Vec<u8> = vec![];
         match self.version {
-            EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&data).to_writer(&mut res),
-            EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&data).to_writer(&mut res),
+            EpubVersion::V20 => templates::v2::CONTENT_OPF.render(&Engine::new(), &data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::CONTENT_OPF.render(&Engine::new(), &data).to_writer(&mut res),
         }
         .map_err(|e| crate::Error::TemplateError {
             msg: "could not render template for content.opf".to_string(),
@@ -812,8 +813,8 @@ impl<Z: Zip> EpubBuilder<Z> {
 
         let mut res: Vec<u8> = vec![];
         match self.version {
-            EpubVersion::V20 => templates::v2::NAV_XHTML.render(&data).to_writer(&mut res),
-            EpubVersion::V30 => templates::v3::NAV_XHTML.render(&data).to_writer(&mut res),
+            EpubVersion::V20 => templates::v2::NAV_XHTML.render(&Engine::new(), &data).to_writer(&mut res),
+            EpubVersion::V30 => templates::v3::NAV_XHTML.render(&Engine::new(), &data).to_writer(&mut res),
         }
         .map_err(|e| crate::Error::TemplateError {
             msg: "error rendering nav.xhtml template".to_string(),

@@ -12,7 +12,6 @@ use std::io::Write;
 use std::path::Path;
 
 use crate::Result;
-use libzip::write::FileOptions;
 use libzip::CompressionMethod;
 use libzip::ZipWriter;
 
@@ -43,7 +42,7 @@ impl ZipLibrary {
         writer.set_comment(""); // Fix issues with some readers
         writer.start_file(
             "mimetype",
-            FileOptions::default().compression_method(CompressionMethod::Stored),
+            libzip::write::SimpleFileOptions::default().compression_method(CompressionMethod::Stored),
         )?;
         writer
             .write(b"application/epub+zip")
@@ -63,7 +62,7 @@ impl Zip for ZipLibrary {
             // Path names should not use backspaces in zip files
             file = file.replace('\\', "/");
         }
-        let options = FileOptions::default();
+        let options = libzip::write::SimpleFileOptions::default();
         self.writer.start_file(file.clone(), options).map_err(|e| {
             crate::Error::ZipErrorWithMessage {
                 msg: format!("could not create file '{}' in epub", file),
@@ -77,7 +76,7 @@ impl Zip for ZipLibrary {
         Ok(())
     }
 
-    fn generate<W: Write>(&mut self, mut to: W) -> Result<()> {
+    fn generate<W: Write>(self, mut to: W) -> Result<()> {
         let cursor = self
             .writer
             .finish()
