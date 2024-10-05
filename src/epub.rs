@@ -37,6 +37,28 @@ pub enum PageDirection {
     Rtl,
 }
 
+
+/// Represents the EPUB `<meta>` content inside `content.opf` file.
+///
+/// <meta name="" content="">
+/// 
+#[derive(Debug)]
+pub struct MetadataOpf {
+    /// Name of the `<meta>` tag
+    pub name: String,
+    /// Content of the `<meta>` tag
+    pub content: String
+}
+
+impl MetadataOpf {
+    /// Create new instance
+    /// 
+    /// 
+    pub fn new(&self, meta_name: String, meta_content: String) -> Self {
+        Self { name: meta_name, content: meta_content }
+    }
+}
+
 impl ToString for PageDirection {
     fn to_string(&self) -> String {
         match &self {
@@ -144,6 +166,7 @@ impl Content {
 #[derive(Debug)]
 pub struct EpubBuilder<Z: Zip> {
     version: EpubVersion,
+    direction: PageDirection,    
     zip: Z,
     files: Vec<Content>,
     metadata: Metadata,
@@ -151,6 +174,7 @@ pub struct EpubBuilder<Z: Zip> {
     stylesheet: bool,
     inline_toc: bool,
     escape_html: bool,
+    meta_opf: Vec<MetadataOpf>
 }
 
 impl<Z: Zip> EpubBuilder<Z> {
@@ -158,6 +182,7 @@ impl<Z: Zip> EpubBuilder<Z> {
     pub fn new(zip: Z) -> Result<EpubBuilder<Z>> {
         let mut epub = EpubBuilder {
             version: EpubVersion::V20,
+            direction: PageDirection::Ltr,
             zip,
             files: vec![],
             metadata: Metadata::default(),
@@ -165,6 +190,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             stylesheet: false,
             inline_toc: false,
             escape_html: true,
+            meta_opf: Vec::new()
         };
 
         epub.zip
@@ -185,6 +211,36 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// * 'V30`: EPUB 3.0.1
     pub fn epub_version(&mut self, version: EpubVersion) -> &mut Self {
         self.version = version;
+        self
+    }
+    
+    /// Set EPUB Direction (default: Ltr)
+    ///
+    /// * `Ltr`: Left-To-Right 
+    /// * `Rtl`: Right-To-Left 
+    /// 
+    /// 
+    pub fn epub_direction(&mut self, direction: PageDirection) -> &mut Self {
+        self.direction = direction;
+        self
+    }
+    
+
+    /// Add custom <meta> to `content.opf`
+    /// Syntax: `self.add_metadata_opf(name, content)`
+    /// 
+    /// ### Example
+    /// If you wanna add `<meta name="primary-writing-mode" content="vertical-rl"/>` into `content.opf`
+    /// 
+    /// ```rust
+    /// self.add_metadata_opf(MetadataOpf {
+    ///     name: String::from("primary-writing-mode"),
+    ///     content: String::from("vertical-rl")
+    /// })
+    /// ```
+    /// 
+    pub fn add_metadata_opf(&mut self, item: MetadataOpf) -> &mut Self {
+        self.meta_opf.push(item);
         self
     }
 
@@ -550,6 +606,14 @@ impl<Z: Zip> EpubBuilder<Z> {
                 common::encode_html(rights, self.escape_html),
             ));
         }
+        for meta in &self.meta_opf{
+            optional.push(format!(
+                "<meta name=\"{}\" content=\"{}\"/>", 
+                common::encode_html(&meta.name, self.escape_html),
+                common::encode_html(&meta.content, self.escape_html),
+            ));
+        }
+
         let date_modified = self
             .metadata
             .date_modified
