@@ -505,6 +505,13 @@ impl<Z: Zip> EpubBuilder<Z> {
         self.escape_html = val;
     }
 
+    /// Sets a single language of the EPUB
+    #[deprecated(since = "0.8.3", note = "Use set_languages or add_language instead")]
+    pub fn set_lang<S: Into<String>>(&mut self, value: S) {
+        self.clear_languages();
+        self.add_language(value);
+    }
+
     /// Sets the languages of the EPUB
     pub fn set_languages(&mut self, value: Vec<String>) {
         self.metadata.lang = value;
