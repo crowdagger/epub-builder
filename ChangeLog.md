@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+0.8.3 (2026-04-10)
+=======================
+* Add supports for multiple languages (MateuSai)
+
 0.8.2 (2025-11-27)
 =======================
 * Add Send + Sync constraint to MetadataRenderer (whth)
