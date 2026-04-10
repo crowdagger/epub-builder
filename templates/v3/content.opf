@@ -7,7 +7,9 @@
     {% if date_published %}
     <dc:date>{{date_published}}</dc:date>
     {% endif %}
-    <dc:language>{{lang}}</dc:language>
+    {% for l in lang %}
+    <dc:language id="epub-creator-{{l.id_attr}}">{{l.name}}</dc:language>
+    {% endfor %}
     {% if author %}
     {% for a in author %}
     <dc:creator id="epub-creator-{{a.id_attr}}">{{a.name}}</dc:creator>

@@ -239,7 +239,7 @@ impl FromStr for PageDirection {
 pub struct Metadata {
     pub title: String,
     pub author: Vec<String>,
-    pub lang: String,
+    pub lang: Vec<String>,
     pub direction: PageDirection,
     pub generator: String,
     pub toc_name: String,
@@ -256,7 +256,7 @@ impl Default for Metadata {
         Self {
             title: String::new(),
             author: vec![],
-            lang: String::from("en"),
+            lang: vec![],
             direction: PageDirection::default(),
             generator: String::from("Rust EPUB library"),
             toc_name: String::from("Table Of Contents"),
@@ -443,7 +443,14 @@ impl<Z: Zip> EpubBuilder<Z> {
                 }
             }
             "title" => self.metadata.title = value.into(),
-            "lang" => self.metadata.lang = value.into(),
+            "lang" => {
+                let value = value.into();
+                if value.is_empty() {
+                    self.metadata.lang = vec![];
+                } else {
+                    self.metadata.lang.push(value.into())
+                }
+            }
             "direction" => self.metadata.direction = PageDirection::from_str(&value.into())?,
             "generator" => self.metadata.generator = value.into(),
             "description" => {
@@ -481,7 +488,7 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Remove all authors from EPUB
     pub fn clear_authors<S: Into<String>>(&mut self) {
-        self.metadata.author.clear()
+        self.metadata.author.clear();
     }
 
     /// Sets the title of the EPUB
@@ -498,12 +505,22 @@ impl<Z: Zip> EpubBuilder<Z> {
         self.escape_html = val;
     }
 
-    /// Sets the language of the EPUB
+    /// Sets the languages of the EPUB
+    pub fn set_languages(&mut self, value: Vec<String>) {
+        self.metadata.lang = value;
+    }
+
+    /// Adds a language of the EPUB
     ///
     /// This is quite important as EPUB renderers rely on it
     /// for e.g. hyphenating words.
-    pub fn set_lang<S: Into<String>>(&mut self, value: S) {
-        self.metadata.lang = value.into();
+    pub fn add_language<S: Into<String>>(&mut self, value: S) {
+        self.metadata.lang.push(value.into());
+    }
+
+    /// Remove all languages from EPUB
+    pub fn clear_languages(&mut self) {
+        self.metadata.lang.clear();
     }
 
     /// Sets the generator of the book (should be your program name)
@@ -864,9 +881,17 @@ impl<Z: Zip> EpubBuilder<Z> {
                 };
                 authors.push(author);
             }
+            let mut languages: Vec<_> = vec![];
+            for (i, lang) in self.metadata.lang.iter().enumerate() {
+                let lang = upon::value! {
+                    id_attr: html_escape::encode_double_quoted_attribute(&i.to_string()),
+                    name: common::encode_html(lang, self.escape_html)
+                };
+                languages.push(lang);
+            }
             upon::value! {
                 author: authors,
-                lang: html_escape::encode_text(&self.metadata.lang),
+                lang: languages,
                 direction: self.metadata.direction.to_string(),
                 title: common::encode_html(&self.metadata.title, self.escape_html),
                 generator_attr: html_escape::encode_double_quoted_attribute(&self.metadata.generator),
