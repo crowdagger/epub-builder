@@ -12,8 +12,10 @@
     <h1 id="toc-title">{{toc_name}}</h1>
 {{content}}
   </nav>
+  {%- if landmarks %}
   <nav epub:type = "landmarks">
 {{landmarks}}
   </nav>
+  {%- endif %}
 </body>
 </html>
