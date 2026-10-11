@@ -240,7 +240,6 @@ pub struct Metadata {
     pub title: String,
     pub author: Vec<String>,
     pub lang: Vec<String>,
-    pub direction: PageDirection,
     pub generator: String,
     pub toc_name: String,
     pub description: Vec<String>,
@@ -257,7 +256,6 @@ impl Default for Metadata {
             title: String::new(),
             author: vec![],
             lang: vec![],
-            direction: PageDirection::default(),
             generator: String::from("Rust EPUB library"),
             toc_name: String::from("Table Of Contents"),
             description: vec![],
@@ -451,7 +449,6 @@ impl<Z: Zip> EpubBuilder<Z> {
                     self.metadata.lang.push(value.into())
                 }
             }
-            "direction" => self.metadata.direction = PageDirection::from_str(&value.into())?,
             "generator" => self.metadata.generator = value.into(),
             "description" => {
                 let value = value.into();
@@ -899,7 +896,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             upon::value! {
                 author: authors,
                 lang: languages,
-                direction: self.metadata.direction.to_string(),
+                direction: self.direction.to_string(),
                 title: common::encode_html(&self.metadata.title, self.escape_html),
                 generator_attr: html_escape::encode_double_quoted_attribute(&self.metadata.generator),
                 toc_name: common::encode_html(&self.metadata.toc_name, self.escape_html),
