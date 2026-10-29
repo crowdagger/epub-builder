@@ -249,6 +249,7 @@ pub struct Metadata {
     pub date_published: Option<chrono::DateTime<chrono::Utc>>,
     pub date_modified: Option<chrono::DateTime<chrono::Utc>>,
     pub uuid: Option<uuid::Uuid>,
+    pub publisher: Option<String>,
 }
 
 impl Default for Metadata {
@@ -266,6 +267,7 @@ impl Default for Metadata {
             date_published: None,
             date_modified: None,
             uuid: None,
+            publisher: None,
         }
     }
 }
@@ -426,7 +428,8 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// * `toc_name`: the name to use for table of contents (by default, "Table of Contents");
     /// * `subject`;
     /// * `description`;
-    /// * `license`.
+    /// * `license`;
+    /// * `publisher`: publisher of the book.
 
     pub fn metadata<S1, S2>(&mut self, key: S1, value: S2) -> Result<&mut Self>
     where
@@ -471,6 +474,7 @@ impl<Z: Zip> EpubBuilder<Z> {
             }
             "license" => self.metadata.license = Some(value.into()),
             "toc_name" => self.metadata.toc_name = value.into(),
+            "publisher" => self.metadata.publisher = Some(value.into()),
             s => Err(crate::Error::InvalidMetadataError(s.to_string()))?,
         }
         Ok(self)
@@ -591,6 +595,11 @@ impl<Z: Zip> EpubBuilder<Z> {
     /// This is useful for reproducibly generating epubs.
     pub fn set_uuid(&mut self, uuid: uuid::Uuid) {
         self.metadata.uuid = Some(uuid);
+    }
+
+    /// Sets the publisher of the book
+    pub fn set_publisher<S: Into<String>>(&mut self, value: S) {
+        self.metadata.publisher = Some(value.into());
     }
 
     /// Sets stylesheet of the EPUB.
@@ -911,6 +920,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                 uuid: html_escape::encode_text(&uuid),
                 guide: common::indent(guide.join("\n"), 2), // Not escaped: XML content
                 date_published: if let Some(date) = date_published { date.to_string() } else { String::new() },
+                publisher: self.metadata.publisher.as_deref().map(|p| common::encode_html(p, self.escape_html)).unwrap_or_default(),
             }
         };
 

@@ -17,6 +17,9 @@
     {% endfor %}
     {% endif %}
     <meta property="dcterms:modified">{{date_modified}}</meta>
+    {%- if publisher %}
+    <dc:publisher>{{publisher}}</dc:publisher>
+    {%- endif %}
 {{optional}}
   </metadata>
   <manifest>
