@@ -234,6 +234,140 @@ impl FromStr for PageDirection {
     }
 }
 
+/// A metadata key accepted by [`EpubBuilder::metadata`].
+///
+/// Passing a `MetadataKey` instead of a string lets the compiler check the key: a typo is
+/// a compilation error, instead of a runtime
+/// [`Error::InvalidMetadataError`](crate::Error::InvalidMetadataError).
+///
+/// ```
+/// use epub_builder::{EpubBuilder, MetadataKey, ZipLibrary};
+///
+/// let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
+/// builder
+///     .metadata(MetadataKey::Title, "My book").unwrap()
+///     .metadata(MetadataKey::Author, "Joan Doe").unwrap()
+///     .metadata(MetadataKey::Lang, "en").unwrap();
+/// ```
+///
+/// An invalid key does not compile:
+///
+/// ```compile_fail,E0599
+/// use epub_builder::MetadataKey;
+///
+/// let key = MetadataKey::Titel;
+/// ```
+///
+/// Each key corresponds to the string that `metadata` also accepts (see
+/// [`as_str`](MetadataKey::as_str)); the conversion between both works in either direction,
+/// through [`AsRef<str>`], [`Display`](core::fmt::Display) and [`FromStr`].
+///
+/// This enum is `#[non_exhaustive]`: new keys may be added in the future.
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum MetadataKey {
+    /// `author`: author of the book.
+    ///
+    /// Each call adds an author; the empty string removes all of them.
+    Author,
+    /// `title`: title of the book.
+    ///
+    /// Each call replaces the previous title.
+    Title,
+    /// `lang`: language of the book, quite important as EPUB renderers rely on it
+    /// for e.g. hyphenating words.
+    ///
+    /// Each call adds a language; the empty string removes all of them.
+    Lang,
+    /// `direction`: page progression direction of the book, `ltr` or `rtl`
+    /// (case-insensitive). Any other value is rejected with
+    /// [`Error::PageDirectionError`](crate::Error::PageDirectionError).
+    ///
+    /// Each call replaces the previous direction. It is only used when generating EPUB 3.
+    Direction,
+    /// `generator`: generator of the book (should be your program name).
+    ///
+    /// Each call replaces the previous generator.
+    Generator,
+    /// `description`: description of the book.
+    ///
+    /// Each call adds a description; the empty string removes all of them.
+    Description,
+    /// `subject`: subject of the book.
+    ///
+    /// Each call adds a subject; the empty string removes all of them.
+    Subject,
+    /// `license`: license under which the book is distributed.
+    ///
+    /// Each call replaces the previous license.
+    License,
+    /// `toc_name`: name to use for the table of contents (by default, "Table Of Contents").
+    ///
+    /// Each call replaces the previous name.
+    TocName,
+}
+
+impl MetadataKey {
+    /// Every key, in order of declaration. [`FromStr`] relies on it to find a key from its string.
+    const ALL: [MetadataKey; 9] = [
+        MetadataKey::Author,
+        MetadataKey::Title,
+        MetadataKey::Lang,
+        MetadataKey::Direction,
+        MetadataKey::Generator,
+        MetadataKey::Description,
+        MetadataKey::Subject,
+        MetadataKey::License,
+        MetadataKey::TocName,
+    ];
+
+    /// Returns the string corresponding to this key, as accepted by [`EpubBuilder::metadata`].
+    ///
+    /// ```
+    /// use epub_builder::MetadataKey;
+    ///
+    /// assert_eq!(MetadataKey::TocName.as_str(), "toc_name");
+    /// ```
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            MetadataKey::Author => "author",
+            MetadataKey::Title => "title",
+            MetadataKey::Lang => "lang",
+            MetadataKey::Direction => "direction",
+            MetadataKey::Generator => "generator",
+            MetadataKey::Description => "description",
+            MetadataKey::Subject => "subject",
+            MetadataKey::License => "license",
+            MetadataKey::TocName => "toc_name",
+        }
+    }
+}
+
+impl AsRef<str> for MetadataKey {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl core::fmt::Display for MetadataKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FromStr for MetadataKey {
+    type Err = crate::Error;
+
+    /// Parses a key from its string. The match is exact (case-sensitive); anything else
+    /// is an [`Error::InvalidMetadataError`](crate::Error::InvalidMetadataError).
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Self::ALL
+            .into_iter()
+            .find(|key| key.as_str() == s)
+            .ok_or_else(|| crate::Error::InvalidMetadataError(s.to_string()))
+    }
+}
+
 /// EPUB Metadata
 #[derive(Debug)]
 pub struct Metadata {
@@ -412,29 +546,41 @@ impl<Z: Zip> EpubBuilder<Z> {
 
     /// Set some EPUB metadata
     ///
-    /// For most metadata, this function will replace the existing metadata, but for subject, cteator and identifier who
-    /// can have multiple values, it will add data to the existing data, unless the empty string "" is passed, in which case
-    /// it will delete existing data for this key.
+    /// For most metadata, this function will replace the existing metadata, but for author, lang, description and
+    /// subject, which can have multiple values, it will add data to the existing data, unless the empty string ""
+    /// is passed, in which case it will delete existing data for this key.
     ///
     /// # Valid keys used by the EPUB builder
     ///
-    /// * `author`: author(s) of the book;
-    /// * `title`: title of the book;
-    /// * `lang`: the language of the book, quite important as EPUB renderers rely on it
+    /// The `key` is preferably a [`MetadataKey`], which cannot be invalid. For compatibility,
+    /// the string corresponding to a key ([`MetadataKey::as_str`]) is still accepted. See
+    /// [`MetadataKey`] for the list of keys and how each of them is handled.
     ///   for e.g. hyphenating words.
-    /// * `generator`: generator of the book (should be your program name);
-    /// * `toc_name`: the name to use for table of contents (by default, "Table of Contents");
-    /// * `subject`;
-    /// * `description`;
-    /// * `license`.
-
+    ///
+    /// # Errors
+    ///
+    /// * [`Error::InvalidMetadataError`](crate::Error::InvalidMetadataError) if `key` is a string
+    ///   that is not the string of a [`MetadataKey`] (this cannot happen with a `MetadataKey`);
+    /// * [`Error::PageDirectionError`](crate::Error::PageDirectionError) if `key` is
+    ///   [`MetadataKey::Direction`] and `value` is neither `ltr` nor `rtl`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use epub_builder::{EpubBuilder, MetadataKey, ZipLibrary};
+    /// let mut builder = EpubBuilder::new(ZipLibrary::new().unwrap()).unwrap();
+    /// builder.metadata(MetadataKey::Title, "My book").unwrap();
+    /// // A string is still accepted, but it can only be checked when running
+    /// builder.metadata("author", "John Doe").unwrap();
+    /// assert!(builder.metadata("autor", "John Doe").is_err());
+    /// ```
     pub fn metadata<S1, S2>(&mut self, key: S1, value: S2) -> Result<&mut Self>
     where
         S1: AsRef<str>,
         S2: Into<String>,
     {
-        match key.as_ref() {
-            "author" => {
+        match key.as_ref().parse::<MetadataKey>()? {
+            MetadataKey::Author => {
                 let value = value.into();
                 if value.is_empty() {
                     self.metadata.author = vec![];
@@ -442,8 +588,8 @@ impl<Z: Zip> EpubBuilder<Z> {
                     self.metadata.author.push(value);
                 }
             }
-            "title" => self.metadata.title = value.into(),
-            "lang" => {
+            MetadataKey::Title => self.metadata.title = value.into(),
+            MetadataKey::Lang => {
                 let value = value.into();
                 if value.is_empty() {
                     self.metadata.lang = vec![];
@@ -451,9 +597,9 @@ impl<Z: Zip> EpubBuilder<Z> {
                     self.metadata.lang.push(value.into())
                 }
             }
-            "direction" => self.metadata.direction = PageDirection::from_str(&value.into())?,
-            "generator" => self.metadata.generator = value.into(),
-            "description" => {
+            MetadataKey::Direction => self.metadata.direction = PageDirection::from_str(&value.into())?,
+            MetadataKey::Generator => self.metadata.generator = value.into(),
+            MetadataKey::Description => {
                 let value = value.into();
                 if value.is_empty() {
                     self.metadata.description = vec![];
@@ -461,7 +607,7 @@ impl<Z: Zip> EpubBuilder<Z> {
                     self.metadata.description.push(value);
                 }
             }
-            "subject" => {
+            MetadataKey::Subject => {
                 let value = value.into();
                 if value.is_empty() {
                     self.metadata.subject = vec![];
@@ -469,9 +615,8 @@ impl<Z: Zip> EpubBuilder<Z> {
                     self.metadata.subject.push(value);
                 }
             }
-            "license" => self.metadata.license = Some(value.into()),
-            "toc_name" => self.metadata.toc_name = value.into(),
-            s => Err(crate::Error::InvalidMetadataError(s.to_string()))?,
+            MetadataKey::License => self.metadata.license = Some(value.into()),
+            MetadataKey::TocName => self.metadata.toc_name = value.into(),
         }
         Ok(self)
     }
@@ -1051,4 +1196,286 @@ fn is_id_char(c: char) -> bool {
 // generate an id compatible string, replacing all none ID chars to underscores
 fn to_id(s: &str) -> String {
     "id_".to_string() + &s.replace(|c: char| !is_id_char(c), "_")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    /// A `Zip` that discards everything: these tests only look at the rendered metadata.
+    #[derive(Debug)]
+    struct NullZip;
+
+    impl Zip for NullZip {
+        fn write_file<P: AsRef<Path>, R: Read>(&mut self, _file: P, _content: R) -> Result<()> {
+            Ok(())
+        }
+
+        fn generate<W: Write>(self, _to: W) -> Result<()> {
+            Ok(())
+        }
+    }
+
+    /// Every key with the string `metadata()` accepts for it. This is deliberately written out
+    /// literally, not derived from `as_str()`, so that it is an independent specification.
+    const KEYS: [(MetadataKey, &str); 9] = [
+        (MetadataKey::Author, "author"),
+        (MetadataKey::Title, "title"),
+        (MetadataKey::Lang, "lang"),
+        (MetadataKey::Direction, "direction"),
+        (MetadataKey::Generator, "generator"),
+        (MetadataKey::Description, "description"),
+        (MetadataKey::Subject, "subject"),
+        (MetadataKey::License, "license"),
+        (MetadataKey::TocName, "toc_name"),
+    ];
+
+    fn builder(version: EpubVersion) -> EpubBuilder<NullZip> {
+        let mut builder = EpubBuilder::new(NullZip).unwrap();
+        builder.epub_version(version);
+        builder
+    }
+
+    fn opf(builder: &mut EpubBuilder<NullZip>) -> String {
+        String::from_utf8(builder.render_opf().unwrap()).unwrap()
+    }
+
+    /// Renders every file that contains metadata, with the parts that vary between runs fixed.
+    fn render_all(builder: &mut EpubBuilder<NullZip>) -> String {
+        builder.set_uuid(uuid::Uuid::nil());
+        builder.set_modified_date(chrono::DateTime::UNIX_EPOCH);
+        let nav = builder.render_nav(true).unwrap();
+        let ncx = builder.render_toc().unwrap();
+        format!(
+            "{}\n{}\n{}",
+            opf(builder),
+            String::from_utf8(nav).unwrap(),
+            String::from_utf8(ncx).unwrap()
+        )
+    }
+
+    #[test]
+    fn metadata_key_strings() {
+        for (key, string) in KEYS {
+            assert_eq!(key.as_str(), string);
+            assert_eq!(AsRef::<str>::as_ref(&key), string);
+            assert_eq!(key.to_string(), string);
+            assert_eq!(string.parse::<MetadataKey>().unwrap(), key);
+        }
+    }
+
+    #[test]
+    fn metadata_key_all_is_in_sync_with_the_variants() {
+        // No wildcard on purpose: adding a variant breaks the build here, as a reminder to also
+        // add it to `KEYS` above and to `MetadataKey::ALL`, which `FromStr` relies on.
+        for (key, _) in KEYS {
+            match key {
+                MetadataKey::Author
+                | MetadataKey::Title
+                | MetadataKey::Lang
+                | MetadataKey::Direction
+                | MetadataKey::Generator
+                | MetadataKey::Description
+                | MetadataKey::Subject
+                | MetadataKey::License
+                | MetadataKey::TocName => {}
+            }
+        }
+        let keys: Vec<MetadataKey> = KEYS.iter().map(|(key, _)| *key).collect();
+        assert_eq!(MetadataKey::ALL.to_vec(), keys);
+    }
+
+    #[test]
+    fn metadata_key_from_str_rejects_unknown_strings() {
+        for s in [
+            "",
+            "foo",
+            "identifier",
+            "Title",
+            "TITLE",
+            " title",
+            "title ",
+            "toc-name",
+            "tocname",
+        ] {
+            match s.parse::<MetadataKey>() {
+                Err(crate::Error::InvalidMetadataError(got)) => assert_eq!(got, s),
+                other => panic!("{s:?} should be rejected, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn metadata_typed_and_string_keys_are_equivalent() {
+        for (key, string) in KEYS {
+            let value = if key == MetadataKey::Direction {
+                "rtl"
+            } else {
+                "A value"
+            };
+            let mut typed = builder(EpubVersion::V30);
+            typed.metadata(key, value).unwrap();
+            let mut untyped = builder(EpubVersion::V30);
+            untyped.metadata(string, value).unwrap();
+            assert_eq!(
+                render_all(&mut typed),
+                render_all(&mut untyped),
+                "key {key}"
+            );
+        }
+    }
+
+    // The borrowed keys are what is being tested here, so the borrows are not needless.
+    #[allow(clippy::needless_borrows_for_generic_args)]
+    #[test]
+    fn metadata_accepts_any_key_that_is_as_ref_str() {
+        let mut builder = builder(EpubVersion::V20);
+        let title_is = |builder: &mut EpubBuilder<NullZip>, title: &str| {
+            assert!(opf(builder).contains(&format!("<dc:title>{title}</dc:title>")));
+        };
+
+        builder.metadata("title", "from str").unwrap();
+        title_is(&mut builder, "from str");
+        builder
+            .metadata(String::from("title"), "from String")
+            .unwrap();
+        title_is(&mut builder, "from String");
+        builder
+            .metadata(&String::from("title"), "from ref String")
+            .unwrap();
+        title_is(&mut builder, "from ref String");
+        builder
+            .metadata(std::borrow::Cow::Borrowed("title"), "from Cow")
+            .unwrap();
+        title_is(&mut builder, "from Cow");
+        builder
+            .metadata(MetadataKey::Title, "from MetadataKey")
+            .unwrap();
+        title_is(&mut builder, "from MetadataKey");
+        builder
+            .metadata(&MetadataKey::Title, "from ref MetadataKey")
+            .unwrap();
+        title_is(&mut builder, "from ref MetadataKey");
+    }
+
+    #[test]
+    fn metadata_invalid_string_key_is_still_an_error() {
+        let mut builder = builder(EpubVersion::V20);
+        builder.metadata(MetadataKey::Title, "Kept").unwrap();
+        match builder.metadata("titel", "Typo").err() {
+            Some(crate::Error::InvalidMetadataError(key)) => assert_eq!(key, "titel"),
+            other => panic!("expected InvalidMetadataError, got {other:?}"),
+        }
+        assert!(opf(&mut builder).contains("<dc:title>Kept</dc:title>"));
+    }
+
+    #[test]
+    fn metadata_single_value_keys_replace_the_previous_value() {
+        let mut builder = builder(EpubVersion::V20);
+        builder
+            .metadata(MetadataKey::Title, "First title")
+            .unwrap()
+            .metadata(MetadataKey::Title, "Second title")
+            .unwrap()
+            .metadata(MetadataKey::License, "First license")
+            .unwrap()
+            .metadata(MetadataKey::License, "Second license")
+            .unwrap()
+            .metadata(MetadataKey::Generator, "First generator")
+            .unwrap()
+            .metadata(MetadataKey::Generator, "Second generator")
+            .unwrap()
+            .metadata(MetadataKey::TocName, "First contents")
+            .unwrap()
+            .metadata(MetadataKey::TocName, "Second contents")
+            .unwrap();
+        let opf = opf(&mut builder);
+        let nav = String::from_utf8(builder.render_nav(true).unwrap()).unwrap();
+        assert!(opf.contains("<dc:title>Second title</dc:title>"));
+        assert!(opf.contains("<dc:rights>Second license</dc:rights>"));
+        assert!(opf.contains("title=\"Second contents\""));
+        assert!(nav.contains("<meta name=\"generator\" content=\"Second generator\" />"));
+        assert!(nav.contains("<h1 id=\"toc-title\">Second contents</h1>"));
+        for first in ["First title", "First license", "First contents"] {
+            assert!(!opf.contains(first), "{first} should have been replaced");
+        }
+        assert!(!nav.contains("First"));
+    }
+
+    #[test]
+    fn metadata_multiple_value_keys_accumulate_until_cleared() {
+        let cases = [
+            (
+                MetadataKey::Author,
+                "<dc:creator opf:role=\"aut\">",
+                "</dc:creator>",
+            ),
+            (MetadataKey::Lang, "<dc:language>", "</dc:language>"),
+            (
+                MetadataKey::Description,
+                "<dc:description>",
+                "</dc:description>",
+            ),
+            (MetadataKey::Subject, "<dc:subject>", "</dc:subject>"),
+        ];
+        for (key, open, close) in cases {
+            let rendered = |value: &str| format!("{open}{value}{close}");
+            let mut builder = builder(EpubVersion::V20);
+            builder
+                .metadata(key, "one")
+                .unwrap()
+                .metadata(key, "two")
+                .unwrap();
+            let opf_two_values = opf(&mut builder);
+            let (one, two) = (
+                opf_two_values.find(&rendered("one")),
+                opf_two_values.find(&rendered("two")),
+            );
+            assert!(one.is_some() && two.is_some(), "{key}: {opf_two_values}");
+            assert!(one < two, "{key}: values should keep their order");
+
+            // The empty string removes every value...
+            builder.metadata(key, "").unwrap();
+            let opf_cleared = opf(&mut builder);
+            assert!(
+                !opf_cleared.contains(&rendered("one")),
+                "{key}: {opf_cleared}"
+            );
+            assert!(
+                !opf_cleared.contains(&rendered("two")),
+                "{key}: {opf_cleared}"
+            );
+
+            // ... and the key can be used again afterwards.
+            builder.metadata(key, "three").unwrap();
+            assert!(opf(&mut builder).contains(&rendered("three")), "{key}");
+        }
+    }
+
+    #[test]
+    fn metadata_direction_is_validated() {
+        let mut builder = builder(EpubVersion::V30);
+        assert!(opf(&mut builder).contains("page-progression-direction=\"ltr\""));
+
+        builder.metadata(MetadataKey::Direction, "rtl").unwrap();
+        assert!(opf(&mut builder).contains("page-progression-direction=\"rtl\""));
+
+        // Case does not matter
+        builder.metadata(MetadataKey::Direction, "LTR").unwrap();
+        assert!(opf(&mut builder).contains("page-progression-direction=\"ltr\""));
+
+        // An invalid value is an error, and leaves the direction as it was
+        builder.metadata(MetadataKey::Direction, "rtl").unwrap();
+        match builder.metadata(MetadataKey::Direction, "up").err() {
+            Some(crate::Error::PageDirectionError(value)) => assert_eq!(value, "up"),
+            other => panic!("expected PageDirectionError, got {other:?}"),
+        }
+        assert!(opf(&mut builder).contains("page-progression-direction=\"rtl\""));
+
+        // EPUB 2 has no page progression direction
+        let mut builder = self::builder(EpubVersion::V20);
+        builder.metadata(MetadataKey::Direction, "rtl").unwrap();
+        assert!(!opf(&mut builder).contains("page-progression-direction"));
+    }
 }
